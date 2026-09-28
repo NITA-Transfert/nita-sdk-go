@@ -1,0 +1,2435 @@
+openapi: 3.1.0
+info:
+  description: |
+    APIs partenaires NITA.
+
+    Perimetre : endpoints v2 (/api/v2/**).
+
+    Deux couches d'erreurs, a ne pas confondre :
+
+    - TRANSPORT (vrais statuts HTTP) : 400 (corps invalide, en-tetes de
+      signature absents/malformes), 401 (cle, jeton Bearer ou signature
+      invalides, horodatage perime), 403 (produit non souscrit, jeton
+      invalide/expire).
+    - METIER : renvoyee en HTTP 200, le vrai code se trouve dans l'enveloppe
+      {status, code, message, data} - par exemple 402, 404, 405, 409
+      (requestId deja utilise), 500. Testez le champ `code` du corps, pas le
+      seul statut HTTP.
+
+    Signature (POST/PUT) : hex(HMAC-SHA256(secret_partenaire, timestamp + "
+    " + nonce + "
+    " + corps)),
+    portee par X-NT-TIMESTAMP, X-NT-NONCE et X-NT-SIGNATURE. Les SDK officiels
+    la calculent et la posent au niveau transport.
+  title: Nita transfert d'argent | Niger Poste
+  version: "1.0"
+servers:
+- description: Generated server url
+  url: http://localhost:8584
+security:
+- bearerAuth: []
+  ApiKey: []
+tags:
+- description: API v2 de vérification du statut d'une transaction
+  name: Checking v2
+- description: API v2 de gestion des transactions d'achat en ligne
+  name: Achat en ligne v2
+- description: API v2 de gestion d'un compte MyNita
+  name: MyNita v2
+- description: API v2 de gestion des localités NITA
+  name: Localités v2
+- description: API v2 de gestion des transactions. Photos transmises en Base64 dans
+    le JSON body.
+  name: Transactions v2
+- description: API v2 de gestion de Compte de transactions
+  name: Compte v2
+- description: Envois de fonds entre partenaires (P2P / B2B) — API v2
+  name: Envoi inter-partenaire v2
+paths:
+  /api/v2/nitaServices/account/balance:
+    get:
+      description: Permet de récupérer le solde du compte de stock.
+      operationId: consulterSoldeCompte
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2Double'
+          description: Solde principal récupéré avec succès
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2Double'
+          description: Compte non trouvé
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2Double'
+          description: Erreur interne du serveur
+        "401":
+          description: "Authentification refusee : cle X-NT-API-KEY absente ou invalide,\
+            \ jeton Bearer absent, signature HMAC invalide, horodatage perime."
+        "403":
+          description: "Acces refuse : produit non souscrit par le partenaire, ou\
+            \ jeton Bearer invalide/expire."
+      summary: Consulter le solde du compte
+      tags:
+      - Compte v2
+  /api/v2/nitaServices/achatEnLigne/annulerAchat:
+    put:
+      description: "Annule un achat via son codeAchat. L'achat doit être au statut\
+        \ 'non payer'.\r\n\r\nRequiert la signature HMAC : en-tetes X-NT-TIMESTAMP,\
+        \ X-NT-NONCE et X-NT-SIGNATURE (voir la description de l'API). Les SDK officiels\
+        \ les posent automatiquement."
+      operationId: annulerAchat
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnnulationAchatDto'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2CheckAchatStatusResponseV2'
+          description: Achat annule avec succes
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2'
+          description: Statut invalide pour annulation
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2'
+          description: Erreur interne
+        "401":
+          description: "Authentification refusee : cle X-NT-API-KEY absente ou invalide,\
+            \ jeton Bearer absent, signature HMAC invalide, horodatage perime."
+        "403":
+          description: "Acces refuse : produit non souscrit par le partenaire, ou\
+            \ jeton Bearer invalide/expire."
+      summary: Annuler un achat
+      tags:
+      - Achat en ligne v2
+  /api/v2/nitaServices/achatEnLigne/checkAchatStatus:
+    post:
+      description: "Vérifie le statut d'un achat en ligne via le requestId.\r\n\r\n\
+        Requiert la signature HMAC : en-tetes X-NT-TIMESTAMP, X-NT-NONCE et X-NT-SIGNATURE\
+        \ (voir la description de l'API). Les SDK officiels les posent automatiquement."
+      operationId: checkAchatStatus
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckAchatStatusModel'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2CheckAchatStatusResponseV2'
+          description: Statut de l'achat recupere avec succes
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2'
+          description: Achat introuvable
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2'
+          description: Erreur interne
+        "400":
+          description: "Requete invalide : corps non conforme (validation), ou en-tetes\
+            \ de signature absents/malformes."
+        "401":
+          description: "Authentification refusee : cle X-NT-API-KEY absente ou invalide,\
+            \ jeton Bearer absent, signature HMAC invalide, horodatage perime."
+        "403":
+          description: "Acces refuse : produit non souscrit par le partenaire, ou\
+            \ jeton Bearer invalide/expire."
+      summary: Vérifier le statut d'un achat
+      tags:
+      - Achat en ligne v2
+  /api/v2/nitaServices/achatEnLigne/saveAchatEnLigne:
+    post:
+      description: "Crée un achat en ligne. Toutes les données sont transmises en\
+        \ JSON body.\r\n\r\nRequiert la signature HMAC : en-tetes X-NT-TIMESTAMP,\
+        \ X-NT-NONCE et X-NT-SIGNATURE (voir la description de l'API). Les SDK officiels\
+        \ les posent automatiquement."
+      operationId: addAchatEnligne
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AchatEnLigneModel'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2AddAchatEnligneResponseV2'
+          description: Achat en ligne cree avec succes
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2'
+          description: Données invalides
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2'
+          description: Erreur interne
+        "401":
+          description: "Authentification refusee : cle X-NT-API-KEY absente ou invalide,\
+            \ jeton Bearer absent, signature HMAC invalide, horodatage perime."
+        "403":
+          description: "Acces refuse : produit non souscrit par le partenaire, ou\
+            \ jeton Bearer invalide/expire."
+      summary: Créer un achat en ligne
+      tags:
+      - Achat en ligne v2
+  /api/v2/nitaServices/checkStatus/transaction:
+    post:
+      description: "Vérifie si un envoi s'est bien passé via le requestId fourni en\
+        \ JSON body.\r\n\r\nRequiert la signature HMAC : en-tetes X-NT-TIMESTAMP,\
+        \ X-NT-NONCE et X-NT-SIGNATURE (voir la description de l'API). Les SDK officiels\
+        \ les posent automatiquement."
+      operationId: checkRequestOperation
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckTransactionRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2CheckStatusResponseV2'
+          description: Transaction trouvée avec succès
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2CheckStatusResponseV2'
+          description: Accès non autorisé
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2CheckStatusResponseV2'
+          description: Transaction non trouvée
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2CheckStatusResponseV2'
+          description: Erreur interne du serveur
+        "400":
+          description: "Requete invalide : corps non conforme (validation), ou en-tetes\
+            \ de signature absents/malformes."
+        "401":
+          description: "Authentification refusee : cle X-NT-API-KEY absente ou invalide,\
+            \ jeton Bearer absent, signature HMAC invalide, horodatage perime."
+      summary: Vérification de l'état d'un envoi
+      tags:
+      - Checking v2
+  /api/v2/nitaServices/compteMynita/checkCompteExistence:
+    post:
+      description: "Vérifie si un compte MyNita existe pour un numéro de téléphone\
+        \ donné.\r\n\r\nRequiert la signature HMAC : en-tetes X-NT-TIMESTAMP, X-NT-NONCE\
+        \ et X-NT-SIGNATURE (voir la description de l'API). Les SDK officiels les\
+        \ posent automatiquement."
+      operationId: checkCompteExistence
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerificationCompteDtoV2'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2String'
+          description: Compte trouvé
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2String'
+          description: API key manquante
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2String'
+          description: Compte introuvable
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2String'
+          description: Erreur interne du serveur
+        "400":
+          description: "Requete invalide : corps non conforme (validation), ou en-tetes\
+            \ de signature absents/malformes."
+        "403":
+          description: "Acces refuse : produit non souscrit par le partenaire, ou\
+            \ jeton Bearer invalide/expire."
+      summary: Vérifier l'existence d'un compte MyNita
+      tags:
+      - MyNita v2
+  /api/v2/nitaServices/localite/pays:
+    get:
+      operationId: getAllIndicatifs
+      responses:
+        "200":
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2IndicatifsResponseV2'
+          description: OK
+        "401":
+          description: "Authentification refusee : cle X-NT-API-KEY absente ou invalide,\
+            \ jeton Bearer absent, signature HMAC invalide, horodatage perime."
+        "403":
+          description: "Acces refuse : produit non souscrit par le partenaire, ou\
+            \ jeton Bearer invalide/expire."
+      summary: Obtenir la liste des indicatifs téléphoniques de tous les pays actifs
+      tags:
+      - Localités v2
+  /api/v2/nitaServices/localite/ville:
+    get:
+      operationId: getAllActiveVillesListe
+      responses:
+        "200":
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2ListVilleResponse'
+          description: OK
+        "401":
+          description: "Authentification refusee : cle X-NT-API-KEY absente ou invalide,\
+            \ jeton Bearer absent, signature HMAC invalide, horodatage perime."
+        "403":
+          description: "Acces refuse : produit non souscrit par le partenaire, ou\
+            \ jeton Bearer invalide/expire."
+      summary: Obtenir la liste des villes actives
+      tags:
+      - Localités v2
+  /api/v2/nitaServices/transaction/AnnulePartenaireToWallet:
+    post:
+      description: "Annule une transaction Partenaire TO Wallet.\r\n\r\nRequiert la\
+        \ signature HMAC : en-tetes X-NT-TIMESTAMP, X-NT-NONCE et X-NT-SIGNATURE (voir\
+        \ la description de l'API). Les SDK officiels les posent automatiquement."
+      operationId: AnnulePartenaireToWallet
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnnulePartenaireToWalletModel'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2AnnulationPartenaireToWalletResponseV2'
+          description: Recharge annulee avec succes
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2'
+          description: Données invalides
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2'
+          description: Erreur interne
+        "401":
+          description: "Authentification refusee : cle X-NT-API-KEY absente ou invalide,\
+            \ jeton Bearer absent, signature HMAC invalide, horodatage perime."
+        "403":
+          description: "Acces refuse : produit non souscrit par le partenaire, ou\
+            \ jeton Bearer invalide/expire."
+      summary: Annulation Partenaire To Wallet (v2)
+      tags:
+      - Transactions v2
+  /api/v2/nitaServices/transaction/GetPartenaireToWallet:
+    post:
+      description: "Récupère les détails d'une opération P2W à partir du requestId\
+        \ et du codeRecharge.\r\n\r\nRequiert la signature HMAC : en-tetes X-NT-TIMESTAMP,\
+        \ X-NT-NONCE et X-NT-SIGNATURE (voir la description de l'API). Les SDK officiels\
+        \ les posent automatiquement."
+      operationId: getPartenaireToWallet
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetPartenaireToWalletModel'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2GetPartenaireToWalletResponseV2'
+          description: Opération P2W récupérée avec succès
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2'
+          description: Données invalides
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2'
+          description: Opération introuvable
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2'
+          description: Erreur interne
+        "401":
+          description: "Authentification refusee : cle X-NT-API-KEY absente ou invalide,\
+            \ jeton Bearer absent, signature HMAC invalide, horodatage perime."
+        "403":
+          description: "Acces refuse : produit non souscrit par le partenaire, ou\
+            \ jeton Bearer invalide/expire."
+      summary: Récupération d'une opération Partenaire To Wallet (v2)
+      tags:
+      - Transactions v2
+  /api/v2/nitaServices/transaction/annulerEnvoi:
+    put:
+      description: "Annule l'envoi correspondant au CodeEnvoi fourni.\r\n\r\nRequiert\
+        \ la signature HMAC : en-tetes X-NT-TIMESTAMP, X-NT-NONCE et X-NT-SIGNATURE\
+        \ (voir la description de l'API). Les SDK officiels les posent automatiquement."
+      operationId: annulerEnvoiMyNita
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnnulationDto'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2TransactionResponseV2'
+          description: Envoi annulé avec succès
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2'
+          description: Accès non autorisé
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2'
+          description: Erreur interne du serveur
+        "400":
+          description: "Requete invalide : corps non conforme (validation), ou en-tetes\
+            \ de signature absents/malformes."
+        "401":
+          description: "Authentification refusee : cle X-NT-API-KEY absente ou invalide,\
+            \ jeton Bearer absent, signature HMAC invalide, horodatage perime."
+      summary: Annuler un envoi MyNita (v2)
+      tags:
+      - Transactions v2
+  /api/v2/nitaServices/transaction/getEnvoiToEdit:
+    post:
+      description: "Requiert la signature HMAC : en-tetes X-NT-TIMESTAMP, X-NT-NONCE\
+        \ et X-NT-SIGNATURE (voir la description de l'API). Les SDK officiels les\
+        \ posent automatiquement."
+      operationId: getEnvoiToEdit
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnvoiToEditDto'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2ModelEditEnvoieRequest'
+          description: Informations récupérées avec succès
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2ModelEditEnvoieRequest'
+          description: Envoi introuvable
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2ModelEditEnvoieRequest'
+          description: Erreur interne
+        "401":
+          description: "Authentification refusee : cle X-NT-API-KEY absente ou invalide,\
+            \ jeton Bearer absent, signature HMAC invalide, horodatage perime."
+        "403":
+          description: "Acces refuse : produit non souscrit par le partenaire, ou\
+            \ jeton Bearer invalide/expire."
+      summary: Récupérer les informations d'un envoi à éditer (v2)
+      tags:
+      - Transactions v2
+  /api/v2/nitaServices/transaction/partenaireToCash:
+    post:
+      description: "Effectue un envoi Partenaire To Cash. Photos de pièce d'identité\
+        \ transmises en Base64 dans le JSON body.\r\n\r\nRequiert la signature HMAC\
+        \ : en-tetes X-NT-TIMESTAMP, X-NT-NONCE et X-NT-SIGNATURE (voir la description\
+        \ de l'API). Les SDK officiels les posent automatiquement."
+      operationId: partenaireToCash
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PartenaireToCashDtoV2'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2TransactionResponseV2'
+          description: Transaction partenaireToCash effectuée avec succès
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2'
+          description: Données invalides
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2'
+          description: Erreur interne
+        "401":
+          description: "Authentification refusee : cle X-NT-API-KEY absente ou invalide,\
+            \ jeton Bearer absent, signature HMAC invalide, horodatage perime."
+        "403":
+          description: "Acces refuse : produit non souscrit par le partenaire, ou\
+            \ jeton Bearer invalide/expire."
+      summary: Envoi Partenaire To Cash (v2)
+      tags:
+      - Transactions v2
+  /api/v2/nitaServices/transaction/partenaireToWallet:
+    post:
+      description: "Effectue une transaction Partenaire TO Wallet.\r\n\r\nRequiert\
+        \ la signature HMAC : en-tetes X-NT-TIMESTAMP, X-NT-NONCE et X-NT-SIGNATURE\
+        \ (voir la description de l'API). Les SDK officiels les posent automatiquement."
+      operationId: partenaireToWallet
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PartenaireToWalletModel'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2PartenaireToWalletResponseV2'
+          description: Recharge effectuée avec succès
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2'
+          description: Données invalides
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2'
+          description: Erreur interne
+        "401":
+          description: "Authentification refusee : cle X-NT-API-KEY absente ou invalide,\
+            \ jeton Bearer absent, signature HMAC invalide, horodatage perime."
+        "403":
+          description: "Acces refuse : produit non souscrit par le partenaire, ou\
+            \ jeton Bearer invalide/expire."
+      summary: Partenaire To Wallet (v2)
+      tags:
+      - Transactions v2
+  /api/v2/nitaServices/transaction/updateEnvoi:
+    put:
+      description: "Requiert la signature HMAC : en-tetes X-NT-TIMESTAMP, X-NT-NONCE\
+        \ et X-NT-SIGNATURE (voir la description de l'API). Les SDK officiels les\
+        \ posent automatiquement."
+      operationId: updateEnvoiMyNita
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateEnvoiDto'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2Void'
+          description: Envoi modifié avec succès
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2'
+          description: Accès non autorisé
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2'
+          description: Erreur interne
+        "400":
+          description: "Requete invalide : corps non conforme (validation), ou en-tetes\
+            \ de signature absents/malformes."
+        "401":
+          description: "Authentification refusee : cle X-NT-API-KEY absente ou invalide,\
+            \ jeton Bearer absent, signature HMAC invalide, horodatage perime."
+      summary: Modifier un envoi MyNita (v2)
+      tags:
+      - Transactions v2
+  /api/v2/nitaServices/envoi-inter-partenaire/creation:
+    post:
+      description: "Crée un envoi de fonds entre le partenaire authentifié et un partenaire\
+        \ destinataire (identifié par alias) de la même organisation. Idempotent via\
+        \ requestId.\r\n\r\nRequiert la signature HMAC : en-tetes X-NT-TIMESTAMP,\
+        \ X-NT-NONCE et X-NT-SIGNATURE (voir la description de l'API). Les SDK officiels\
+        \ les posent automatiquement."
+      operationId: creerEnvoiInterPartenaire
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnvoiInterPartenaireRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2EnvoiInterPartenaireResponseV2'
+          description: Envoi effectué avec succès
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2'
+          description: Données invalides
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2'
+          description: Non authentifié / signature invalide
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2'
+          description: Erreur interne
+      summary: Créer un envoi inter-partenaire (P2P)
+      tags:
+      - Envoi inter-partenaire v2
+  /api/v2/nitaServices/transaction/partenaireToCash/frais:
+    post:
+      description: "Calcule les frais d'un envoi cash selon la grille tarifaire (profil\
+        \ CCP par defaut, ou BIN) et la destination, sans debit. L'organisation destinataire\
+        \ est portee par la ville de destination.\r\n\r\nRequiert la signature HMAC\
+        \ : en-tetes X-NT-TIMESTAMP, X-NT-NONCE et X-NT-SIGNATURE (voir la description\
+        \ de l'API). Les SDK officiels les posent automatiquement."
+      operationId: calculerFraisPartenaireToCash
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CalculeFraisOperationRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2FraisPreviewResponseV2'
+          description: Frais calcules avec succes
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2'
+          description: Donnees invalides
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2'
+          description: Non authentifie / signature invalide
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2'
+          description: Erreur interne
+      summary: Calcul des frais Partenaire To Cash (P2C)
+      tags:
+      - Transactions v2
+  /api/v2/nitaServices/transaction/partenaireToWallet/frais:
+    post:
+      description: "Calcule les frais d'une recharge P2W sans debit. Le montant retourne\
+        \ est celui qui sera reellement debite : meme profil, meme organisation destinataire\
+        \ (pays du wallet client) et meme reduction eventuelle.\r\n\r\nRequiert la\
+        \ signature HMAC : en-tetes X-NT-TIMESTAMP, X-NT-NONCE et X-NT-SIGNATURE (voir\
+        \ la description de l'API). Les SDK officiels les posent automatiquement."
+      operationId: calculerFraisPartenaireToWallet
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PartenaireToWalletFraisRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2FraisPreviewResponseV2'
+          description: Frais calcules avec succes
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2'
+          description: Donnees invalides
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2'
+          description: Non authentifie / signature invalide
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2'
+          description: Erreur interne
+      summary: Calcul des frais Partenaire To Wallet (P2W)
+      tags:
+      - Transactions v2
+  /api/v2/nitaServices/envoi-inter-partenaire/frais:
+    post:
+      description: "Calcule les frais d'un envoi entre le partenaire authentifie et\
+        \ un partenaire destinataire (identifie par alias), sans debit. Meme resolution\
+        \ inter-organisation et meme bareme que le debit reel.\r\n\r\nRequiert la\
+        \ signature HMAC : en-tetes X-NT-TIMESTAMP, X-NT-NONCE et X-NT-SIGNATURE (voir\
+        \ la description de l'API). Les SDK officiels les posent automatiquement."
+      operationId: calculerFraisEnvoiInterPartenaire
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnvoiInterPartenaireFraisRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2FraisPreviewResponseV2'
+          description: Frais calcules avec succes
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2'
+          description: Donnees invalides
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2'
+          description: Non authentifie / signature invalide
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApisResponseV2'
+          description: Erreur interne
+      summary: Calcul des frais d'un envoi inter-partenaire (P2P)
+      tags:
+      - Envoi inter-partenaire v2
+components:
+  schemas:
+    UpdateEnvoiDto:
+      example:
+        numeroExpediteur: numeroExpediteur
+        nomDestinataire: nomDestinataire
+        prenomDestinataire: prenomDestinataire
+        villeDestination: villeDestination
+        requestId: requestId
+        codeEnvoi: codeEnvoi
+        numeroDestinataire: numeroDestinataire
+        indicatifDestinataire: indicatifDestinataire
+        indicatifExpediteur: indicatifExpediteur
+      properties:
+        codeEnvoi:
+          maxLength: 50
+          minLength: 0
+          type: string
+        requestId:
+          maxLength: 100
+          minLength: 0
+          type: string
+        indicatifExpediteur:
+          minLength: 1
+          pattern: "^\\+?\\d{2,6}$"
+          type: string
+        numeroExpediteur:
+          minLength: 1
+          pattern: "^\\d{4,15}$"
+          type: string
+        nomDestinataire:
+          maxLength: 100
+          minLength: 0
+          type: string
+        prenomDestinataire:
+          maxLength: 100
+          minLength: 0
+          type: string
+        indicatifDestinataire:
+          minLength: 1
+          pattern: "^\\+?\\d{2,6}$"
+          type: string
+        numeroDestinataire:
+          minLength: 1
+          pattern: "^\\d{4,15}$"
+          type: string
+        villeDestination:
+          maxLength: 100
+          minLength: 0
+          type: string
+      required:
+      - codeEnvoi
+      - indicatifDestinataire
+      - indicatifExpediteur
+      - nomDestinataire
+      - numeroDestinataire
+      - numeroExpediteur
+      - prenomDestinataire
+      - requestId
+      - villeDestination
+    ApisResponseV2:
+      example:
+        code: 6
+        data: "{}"
+        message: message
+        status: SUCCESS
+      properties:
+        status:
+          enum:
+          - SUCCESS
+          - ERROR
+          - ALERT
+          - CONFLICT
+          - UNAUTHORIZED
+          - DUPLICATE
+          - NOT_FOUND
+          - FORBIDDEN
+          type: string
+        code:
+          format: int32
+          type: integer
+        message:
+          type: string
+        data:
+          type: object
+    ApisResponseV2Void:
+      example:
+        code: 6
+        data: "{}"
+        message: message
+        status: SUCCESS
+      properties:
+        status:
+          enum:
+          - SUCCESS
+          - ERROR
+          - ALERT
+          - CONFLICT
+          - UNAUTHORIZED
+          - DUPLICATE
+          - NOT_FOUND
+          - FORBIDDEN
+          type: string
+        code:
+          format: int32
+          type: integer
+        message:
+          type: string
+        data:
+          type: object
+    AnnulationDto:
+      description: Formulaire de demande d'annulation
+      example:
+        numeroExpediteur: numeroExpediteur
+        requestId: requestId
+        codeEnvoi: codeEnvoi
+        adresseIP: adresseIP
+        indicatifExpediteur: indicatifExpediteur
+      properties:
+        codeEnvoi:
+          maxLength: 50
+          minLength: 0
+          type: string
+        requestId:
+          maxLength: 100
+          minLength: 0
+          type: string
+        numeroExpediteur:
+          minLength: 1
+          pattern: "^\\d{4,15}$"
+          type: string
+        indicatifExpediteur:
+          minLength: 1
+          pattern: "^\\+?\\d{2,6}$"
+          type: string
+        adresseIP:
+          maxLength: 45
+          minLength: 0
+          type: string
+      required:
+      - codeEnvoi
+      - indicatifExpediteur
+      - numeroExpediteur
+      - requestId
+    ApisResponseV2TransactionResponseV2:
+      example:
+        code: 0
+        data:
+          nomDestinataire: nomDestinataire
+          typeOperation: typeOperation
+          nomExpediteur: nomExpediteur
+          montant: 6.027456183070403
+          paysDestinataire: paysDestinataire
+          dateTransaction: 2000-01-23T04:56:07.000+00:00
+          statusTransaction: statusTransaction
+          telephoneDestinataire: telephoneDestinataire
+          typeTransaction: typeTransaction
+          prenomExpediteur: prenomExpediteur
+          fraisEnvoi: 1.4658129805029452
+          total: 5.637376656633329
+          fraisInclus: true
+          telephoneExpediteur: telephoneExpediteur
+          prenomDestinataire: prenomDestinataire
+          requestId: requestId
+          codeEnvoi: codeEnvoi
+          villeDestinataire: villeDestinataire
+          reduction: 5.962133916683182
+          publicId: publicId
+        message: message
+        status: SUCCESS
+      properties:
+        status:
+          enum:
+          - SUCCESS
+          - ERROR
+          - ALERT
+          - CONFLICT
+          - UNAUTHORIZED
+          - DUPLICATE
+          - NOT_FOUND
+          - FORBIDDEN
+          type: string
+        code:
+          format: int32
+          type: integer
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/TransactionResponseV2'
+    TransactionResponseV2:
+      example:
+        nomDestinataire: nomDestinataire
+        typeOperation: typeOperation
+        nomExpediteur: nomExpediteur
+        montant: 6.027456183070403
+        paysDestinataire: paysDestinataire
+        dateTransaction: 2000-01-23T04:56:07.000+00:00
+        statusTransaction: statusTransaction
+        telephoneDestinataire: telephoneDestinataire
+        typeTransaction: typeTransaction
+        prenomExpediteur: prenomExpediteur
+        fraisEnvoi: 1.4658129805029452
+        total: 5.637376656633329
+        fraisInclus: true
+        telephoneExpediteur: telephoneExpediteur
+        prenomDestinataire: prenomDestinataire
+        requestId: requestId
+        codeEnvoi: codeEnvoi
+        villeDestinataire: villeDestinataire
+        reduction: 5.962133916683182
+        publicId: publicId
+      properties:
+        publicId:
+          type: string
+        requestId:
+          type: string
+        codeEnvoi:
+          type: string
+        montant:
+          format: double
+          type: number
+        fraisEnvoi:
+          format: double
+          type: number
+        reduction:
+          format: double
+          type: number
+        fraisInclus:
+          type: boolean
+        total:
+          format: double
+          type: number
+        statusTransaction:
+          type: string
+        typeTransaction:
+          type: string
+        typeOperation:
+          type: string
+        nomExpediteur:
+          type: string
+        prenomExpediteur:
+          type: string
+        telephoneExpediteur:
+          type: string
+        nomDestinataire:
+          type: string
+        prenomDestinataire:
+          type: string
+        telephoneDestinataire:
+          type: string
+        villeDestinataire:
+          type: string
+        paysDestinataire:
+          type: string
+        dateTransaction:
+          format: date-time
+          type: string
+    AnnulationAchatDto:
+      description: Formulaire de demande d'annulation
+      example:
+        latTransaction: latTransaction
+        requestId: requestId
+        codeAchat: codeAchat
+        adresseIp: adresseIp
+        longTransaction: longTransaction
+      properties:
+        codeAchat:
+          type: string
+        requestId:
+          type: string
+        longTransaction:
+          type: string
+        latTransaction:
+          type: string
+        adresseIp:
+          type: string
+    ApisResponseV2CheckAchatStatusResponseV2:
+      example:
+        code: 0
+        data:
+          code: code
+          requestId: requestId
+          codeAchat: codeAchat
+          description: description
+        message: message
+        status: SUCCESS
+      properties:
+        status:
+          enum:
+          - SUCCESS
+          - ERROR
+          - ALERT
+          - CONFLICT
+          - UNAUTHORIZED
+          - DUPLICATE
+          - NOT_FOUND
+          - FORBIDDEN
+          type: string
+        code:
+          format: int32
+          type: integer
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/CheckAchatStatusResponseV2'
+    CheckAchatStatusResponseV2:
+      example:
+        code: code
+        requestId: requestId
+        codeAchat: codeAchat
+        description: description
+      properties:
+        code:
+          type: string
+        description:
+          type: string
+        codeAchat:
+          type: string
+        requestId:
+          type: string
+    PartenaireToWalletModel:
+      example:
+        latTransaction: latTransaction
+        prenomDeposant: prenomDeposant
+        montantTransaction: 0.8008281904610115
+        motifTransaction: motifTransaction
+        requestId: requestId
+        nomDeposant: nomDeposant
+        phoneClient: phoneClient
+        typePieceDeposant: typePieceDeposant
+        phoneDeposant: phoneDeposant
+        adresseIp: adresseIp
+        longTransaction: longTransaction
+        numeroPieceDeposant: numeroPieceDeposant
+      properties:
+        phoneClient:
+          type: string
+        montantTransaction:
+          format: double
+          type: number
+        longTransaction:
+          type: string
+        latTransaction:
+          type: string
+        motifTransaction:
+          type: string
+        requestId:
+          type: string
+        adresseIp:
+          type: string
+        phoneDeposant:
+          type: string
+        nomDeposant:
+          type: string
+        prenomDeposant:
+          type: string
+        typePieceDeposant:
+          type: string
+        numeroPieceDeposant:
+          type: string
+    ApisResponseV2PartenaireToWalletResponseV2:
+      example:
+        code: 0
+        data:
+          nomPartenaire: nomPartenaire
+          montantRecharge: 6.027456183070403
+          fraisRecharge: 1.4658129805029452
+          typePieceDeposant: typePieceDeposant
+          phoneDeposant: phoneDeposant
+          prenomPartenaire: prenomPartenaire
+          compteClient: compteClient
+          ComptePartenaire: ComptePartenaire
+          numeroPieceDeposant: numeroPieceDeposant
+          dateTransaction: 2000-01-23T04:56:07.000+00:00
+          statusTransaction: statusTransaction
+          reference: reference
+          typeTransaction: typeTransaction
+          prenomDeposant: prenomDeposant
+          requestId: requestId
+          nomDeposant: nomDeposant
+          montantTotalTransaction: 5.962133916683182
+          adresseIP: adresseIP
+          motif: motif
+          publicId: publicId
+        message: message
+        status: SUCCESS
+      properties:
+        status:
+          enum:
+          - SUCCESS
+          - ERROR
+          - ALERT
+          - CONFLICT
+          - UNAUTHORIZED
+          - DUPLICATE
+          - NOT_FOUND
+          - FORBIDDEN
+          type: string
+        code:
+          format: int32
+          type: integer
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/PartenaireToWalletResponseV2'
+    PartenaireToWalletResponseV2:
+      example:
+        nomPartenaire: nomPartenaire
+        montantRecharge: 6.027456183070403
+        fraisRecharge: 1.4658129805029452
+        typePieceDeposant: typePieceDeposant
+        phoneDeposant: phoneDeposant
+        prenomPartenaire: prenomPartenaire
+        compteClient: compteClient
+        ComptePartenaire: ComptePartenaire
+        numeroPieceDeposant: numeroPieceDeposant
+        dateTransaction: 2000-01-23T04:56:07.000+00:00
+        statusTransaction: statusTransaction
+        reference: reference
+        typeTransaction: typeTransaction
+        prenomDeposant: prenomDeposant
+        requestId: requestId
+        nomDeposant: nomDeposant
+        montantTotalTransaction: 5.962133916683182
+        adresseIP: adresseIP
+        motif: motif
+        publicId: publicId
+      properties:
+        publicId:
+          type: string
+        requestId:
+          type: string
+        adresseIP:
+          type: string
+        reference:
+          type: string
+        motif:
+          type: string
+        montantRecharge:
+          format: double
+          type: number
+        fraisRecharge:
+          format: double
+          type: number
+        montantTotalTransaction:
+          format: double
+          type: number
+        statusTransaction:
+          type: string
+        typeTransaction:
+          type: string
+        compteClient:
+          type: string
+        nomDeposant:
+          type: string
+        prenomDeposant:
+          type: string
+        phoneDeposant:
+          type: string
+        typePieceDeposant:
+          type: string
+        numeroPieceDeposant:
+          type: string
+        ComptePartenaire:
+          type: string
+        nomPartenaire:
+          type: string
+        prenomPartenaire:
+          type: string
+        dateTransaction:
+          format: date-time
+          type: string
+    PartenaireToCashDtoV2:
+      example:
+        photoPieceIdentiteVerso: photoPieceIdentiteVerso
+        situationMatrimoniale: situationMatrimoniale
+        numero: numero
+        villeDestination: villeDestination
+        nomDestinataire: nomDestinataire
+        dateNaissance: 2000-01-23T04:56:07.000+00:00
+        photoPieceIdentiteRecto: photoPieceIdentiteRecto
+        indicatif: indicatif
+        typePiece: typePiece
+        montant: 8008281.904610115
+        numeroDestinataire: numeroDestinataire
+        nom: nom
+        lieuNaissance: lieuNaissance
+        fraisInclus: true
+        requestId: requestId
+        dateDelivrance: 2000-01-23T04:56:07.000+00:00
+        genre: genre
+        autorite: autorite
+        prenom: prenom
+        profession: profession
+        photoIdentite: photoIdentite
+        motifTransaction: motifTransaction
+        numeroPiece: numeroPiece
+        prenomDestinataire: prenomDestinataire
+        adresse: adresse
+        adresseIp: adresseIp
+        urlCallback: urlCallback
+        indicatifDestinataire: indicatifDestinataire
+        paysResidence: paysResidence
+        villeResidence: villeResidence
+        lieuDelivrance: lieuDelivrance
+      properties:
+        nom:
+          maxLength: 100
+          minLength: 0
+          pattern: "^[\\p{L}\\s'.\\-]{1,100}$"
+          type: string
+        prenom:
+          maxLength: 100
+          minLength: 0
+          pattern: "^[\\p{L}\\s'.\\-]{1,100}$"
+          type: string
+        indicatif:
+          minLength: 1
+          pattern: "^\\d{2,6}$"
+          type: string
+        numero:
+          minLength: 1
+          pattern: "^\\d{4,15}$"
+          type: string
+        dateNaissance:
+          format: date-time
+          type: string
+        lieuNaissance:
+          maxLength: 100
+          minLength: 0
+          pattern: "^[\\p{L}\\s'.\\-,]*$"
+          type: string
+        situationMatrimoniale:
+          maxLength: 50
+          minLength: 0
+          type: string
+        genre:
+          maxLength: 20
+          minLength: 0
+          pattern: "^[A-Za-z]*$"
+          type: string
+        profession:
+          maxLength: 100
+          minLength: 0
+          pattern: "^[\\p{L}\\s'.\\-,]*$"
+          type: string
+        adresse:
+          maxLength: 200
+          minLength: 0
+          type: string
+        villeResidence:
+          maxLength: 100
+          minLength: 0
+          pattern: "^[\\p{L}\\s'.\\-]*$"
+          type: string
+        paysResidence:
+          maxLength: 100
+          minLength: 0
+          pattern: "^[\\p{L}\\s'.\\-]*$"
+          type: string
+        typePiece:
+          maxLength: 50
+          minLength: 0
+          type: string
+        numeroPiece:
+          maxLength: 50
+          minLength: 0
+          pattern: "^[a-zA-Z0-9\\s\\-/]*$"
+          type: string
+        dateDelivrance:
+          format: date-time
+          type: string
+        lieuDelivrance:
+          maxLength: 100
+          minLength: 0
+          pattern: "^[\\p{L}\\s'.\\-,]*$"
+          type: string
+        autorite:
+          maxLength: 100
+          minLength: 0
+          pattern: "^[\\p{L}\\s'.\\-]*$"
+          type: string
+        photoPieceIdentiteRecto:
+          type: string
+        photoPieceIdentiteVerso:
+          type: string
+        photoIdentite:
+          type: string
+        requestId:
+          maxLength: 100
+          minLength: 4
+          pattern: "^[a-zA-Z0-9_\\-]{4,100}$"
+          type: string
+        fraisInclus:
+          type: boolean
+        montant:
+          format: double
+          maximum: 100000000
+          type: number
+        villeDestination:
+          maxLength: 100
+          minLength: 0
+          pattern: "^[\\p{L}\\s'.\\-]{1,100}$"
+          type: string
+        nomDestinataire:
+          maxLength: 100
+          minLength: 0
+          pattern: "^[\\p{L}\\s'.\\-]{1,100}$"
+          type: string
+        prenomDestinataire:
+          maxLength: 100
+          minLength: 0
+          pattern: "^[\\p{L}\\s'.\\-]{1,100}$"
+          type: string
+        indicatifDestinataire:
+          minLength: 1
+          pattern: "^\\d{2,6}$"
+          type: string
+        numeroDestinataire:
+          minLength: 1
+          pattern: "^\\d{4,15}$"
+          type: string
+        motifTransaction:
+          maxLength: 500
+          minLength: 0
+          type: string
+        adresseIp:
+          pattern: "^((\\d{1,3}\\.){3}\\d{1,3}|[0-9a-fA-F:]{3,39})?$"
+          type: string
+        urlCallback:
+          type: string
+      required:
+      - fraisInclus
+      - indicatif
+      - indicatifDestinataire
+      - montant
+      - nom
+      - nomDestinataire
+      - numero
+      - numeroDestinataire
+      - prenom
+      - prenomDestinataire
+      - requestId
+      - villeDestination
+    EnvoiToEditDto:
+      example:
+        numeroExpediteur: numeroExpediteur
+        requestId: requestId
+        codeEnvoi: codeEnvoi
+        indicatifExpediteur: indicatifExpediteur
+      properties:
+        codeEnvoi:
+          maxLength: 50
+          minLength: 0
+          type: string
+        requestId:
+          maxLength: 100
+          minLength: 0
+          type: string
+        indicatifExpediteur:
+          minLength: 1
+          pattern: "^\\+?\\d{2,6}$"
+          type: string
+        numeroExpediteur:
+          minLength: 1
+          pattern: "^\\d{4,15}$"
+          type: string
+      required:
+      - codeEnvoi
+      - indicatifExpediteur
+      - numeroExpediteur
+      - requestId
+    ApisResponseV2ModelEditEnvoieRequest:
+      example:
+        code: 0
+        data:
+          villeDestination: villeDestination
+          montantEnvoi: 6.027456183070403
+          nomExpediteur: nomExpediteur
+          phoneDestinateur: phoneDestinateur
+          motifEnvoi: motifEnvoi
+          prenomExpediteur: prenomExpediteur
+          fraisEnvoi: 1.4658129805029452
+          total: 5.962133916683182
+          nomDestinateur: nomDestinateur
+          fraisInclus: true
+          codeEnvoi: codeEnvoi
+          prenomDestinateur: prenomDestinateur
+          phoneExpediteur: phoneExpediteur
+        message: message
+        status: SUCCESS
+      properties:
+        status:
+          enum:
+          - SUCCESS
+          - ERROR
+          - ALERT
+          - CONFLICT
+          - UNAUTHORIZED
+          - DUPLICATE
+          - NOT_FOUND
+          - FORBIDDEN
+          type: string
+        code:
+          format: int32
+          type: integer
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/ModelEditEnvoieRequest'
+    ModelEditEnvoieRequest:
+      example:
+        villeDestination: villeDestination
+        montantEnvoi: 6.027456183070403
+        nomExpediteur: nomExpediteur
+        phoneDestinateur: phoneDestinateur
+        motifEnvoi: motifEnvoi
+        prenomExpediteur: prenomExpediteur
+        fraisEnvoi: 1.4658129805029452
+        total: 5.962133916683182
+        nomDestinateur: nomDestinateur
+        fraisInclus: true
+        codeEnvoi: codeEnvoi
+        prenomDestinateur: prenomDestinateur
+        phoneExpediteur: phoneExpediteur
+      properties:
+        villeDestination:
+          type: string
+        nomDestinateur:
+          type: string
+        prenomDestinateur:
+          type: string
+        nomExpediteur:
+          type: string
+        prenomExpediteur:
+          type: string
+        phoneExpediteur:
+          type: string
+        phoneDestinateur:
+          type: string
+        motifEnvoi:
+          type: string
+        codeEnvoi:
+          type: string
+        montantEnvoi:
+          format: double
+          type: number
+        fraisEnvoi:
+          format: double
+          type: number
+        total:
+          format: double
+          type: number
+        fraisInclus:
+          type: boolean
+    GetPartenaireToWalletModel:
+      example:
+        requestId: requestId
+        codeRecharge: codeRecharge
+      properties:
+        requestId:
+          maxLength: 100
+          minLength: 0
+          type: string
+        codeRecharge:
+          maxLength: 50
+          minLength: 0
+          type: string
+      required:
+      - codeRecharge
+      - requestId
+    ApisResponseV2GetPartenaireToWalletResponseV2:
+      example:
+        code: 0
+        data:
+          nomPartenaire: nomPartenaire
+          montantRecharge: 6.027456183070403
+          comptePartenaire: comptePartenaire
+          fraisRecharge: 1.4658129805029452
+          prenomPartenaire: prenomPartenaire
+          compteClient: compteClient
+          statusTransaction: statusTransaction
+          reference: reference
+          typeTransaction: typeTransaction
+          requestId: requestId
+          montantTotalTransaction: 5.962133916683182
+          adresseIP: adresseIP
+          motif: motif
+        message: message
+        status: SUCCESS
+      properties:
+        status:
+          enum:
+          - SUCCESS
+          - ERROR
+          - ALERT
+          - CONFLICT
+          - UNAUTHORIZED
+          - DUPLICATE
+          - NOT_FOUND
+          - FORBIDDEN
+          type: string
+        code:
+          format: int32
+          type: integer
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/GetPartenaireToWalletResponseV2'
+    GetPartenaireToWalletResponseV2:
+      example:
+        nomPartenaire: nomPartenaire
+        montantRecharge: 6.027456183070403
+        comptePartenaire: comptePartenaire
+        fraisRecharge: 1.4658129805029452
+        prenomPartenaire: prenomPartenaire
+        compteClient: compteClient
+        statusTransaction: statusTransaction
+        reference: reference
+        typeTransaction: typeTransaction
+        requestId: requestId
+        montantTotalTransaction: 5.962133916683182
+        adresseIP: adresseIP
+        motif: motif
+      properties:
+        reference:
+          type: string
+        requestId:
+          type: string
+        adresseIP:
+          type: string
+        motif:
+          type: string
+        montantRecharge:
+          format: double
+          type: number
+        fraisRecharge:
+          format: double
+          type: number
+        montantTotalTransaction:
+          format: double
+          type: number
+        statusTransaction:
+          type: string
+        typeTransaction:
+          type: string
+        compteClient:
+          type: string
+        comptePartenaire:
+          type: string
+        nomPartenaire:
+          type: string
+        prenomPartenaire:
+          type: string
+    AnnulePartenaireToWalletModel:
+      example:
+        requestId: requestId
+        adresseIp: adresseIp
+        codeRecharge: codeRecharge
+        motifAnnulation: motifAnnulation
+      properties:
+        requestId:
+          maxLength: 100
+          minLength: 0
+          type: string
+        codeRecharge:
+          maxLength: 50
+          minLength: 0
+          type: string
+        adresseIp:
+          maxLength: 45
+          minLength: 0
+          type: string
+        motifAnnulation:
+          maxLength: 255
+          minLength: 0
+          type: string
+      required:
+      - adresseIp
+      - codeRecharge
+      - motifAnnulation
+      - requestId
+    AnnulationPartenaireToWalletResponseV2:
+      example:
+        nomPartenaire: nomPartenaire
+        montantRecharge: 6.027456183070403
+        fraisRecharge: 1.4658129805029452
+        prenomPartenaire: prenomPartenaire
+        compteClient: compteClient
+        ComptePartenaire: ComptePartenaire
+        dateTransaction: 2000-01-23T04:56:07.000+00:00
+        statusTransaction: statusTransaction
+        reference: reference
+        typeTransaction: typeTransaction
+        requestId: requestId
+        montantTotalTransaction: 5.962133916683182
+        adresseIP: adresseIP
+        motif: motif
+        publicId: publicId
+      properties:
+        publicId:
+          type: string
+        requestId:
+          type: string
+        adresseIP:
+          type: string
+        reference:
+          type: string
+        motif:
+          type: string
+        montantRecharge:
+          format: double
+          type: number
+        fraisRecharge:
+          format: double
+          type: number
+        montantTotalTransaction:
+          format: double
+          type: number
+        statusTransaction:
+          type: string
+        typeTransaction:
+          type: string
+        compteClient:
+          type: string
+        ComptePartenaire:
+          type: string
+        nomPartenaire:
+          type: string
+        prenomPartenaire:
+          type: string
+        dateTransaction:
+          format: date-time
+          type: string
+    ApisResponseV2AnnulationPartenaireToWalletResponseV2:
+      example:
+        code: 0
+        data:
+          nomPartenaire: nomPartenaire
+          montantRecharge: 6.027456183070403
+          fraisRecharge: 1.4658129805029452
+          prenomPartenaire: prenomPartenaire
+          compteClient: compteClient
+          ComptePartenaire: ComptePartenaire
+          dateTransaction: 2000-01-23T04:56:07.000+00:00
+          statusTransaction: statusTransaction
+          reference: reference
+          typeTransaction: typeTransaction
+          requestId: requestId
+          montantTotalTransaction: 5.962133916683182
+          adresseIP: adresseIP
+          motif: motif
+          publicId: publicId
+        message: message
+        status: SUCCESS
+      properties:
+        status:
+          enum:
+          - SUCCESS
+          - ERROR
+          - ALERT
+          - CONFLICT
+          - UNAUTHORIZED
+          - DUPLICATE
+          - NOT_FOUND
+          - FORBIDDEN
+          type: string
+        code:
+          format: int32
+          type: integer
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/AnnulationPartenaireToWalletResponseV2'
+    CalculeFraisOperationRequest:
+      description: Détails pour le calcul des frais d'envoi
+      example:
+        numeroExpediteur: numeroExpediteur
+        fraisInclus: true
+        villeDestination: villeDestination
+        profil: CCP
+        montant: 0.8008281904610115
+        villeExpedition: villeExpedition
+        indicatifExpediteur: indicatifExpediteur
+      properties:
+        indicatifExpediteur:
+          minLength: 1
+          pattern: "^\\+?\\d{2,6}$"
+          type: string
+        numeroExpediteur:
+          minLength: 1
+          pattern: "^\\d{4,15}$"
+          type: string
+        montant:
+          format: double
+          type: number
+        fraisInclus:
+          type: boolean
+        villeExpedition:
+          minLength: 1
+          type: string
+        villeDestination:
+          minLength: 1
+          type: string
+        profil:
+          default: CCP
+          description: "Grille tarifaire du reseau de retrait cash : CCP (Niger Poste,\
+            \ defaut) ou BIN."
+          enum:
+          - CCP
+          - BIN
+          type: string
+      required:
+      - fraisInclus
+      - indicatifExpediteur
+      - montant
+      - numeroExpediteur
+      - villeDestination
+      - villeExpedition
+    VerificationCompteDtoV2:
+      example:
+        phoneClient: phoneClient
+        indicatifPhoneClient: indicatifPhoneClient
+        adresseIp: adresseIp
+      properties:
+        indicatifPhoneClient:
+          minLength: 1
+          pattern: "^\\d{2,6}$"
+          type: string
+        phoneClient:
+          minLength: 1
+          pattern: "^\\d{4,15}$"
+          type: string
+        adresseIp:
+          pattern: "^((\\d{1,3}\\.){3}\\d{1,3}|[0-9a-fA-F:]{3,39})?$"
+          type: string
+      required:
+      - indicatifPhoneClient
+      - phoneClient
+    ApisResponseV2String:
+      example:
+        code: 0
+        data: data
+        message: message
+        status: SUCCESS
+      properties:
+        status:
+          enum:
+          - SUCCESS
+          - ERROR
+          - ALERT
+          - CONFLICT
+          - UNAUTHORIZED
+          - DUPLICATE
+          - NOT_FOUND
+          - FORBIDDEN
+          type: string
+        code:
+          format: int32
+          type: integer
+        message:
+          type: string
+        data:
+          type: string
+    CheckTransactionRequest:
+      example:
+        requestId: requestId
+      properties:
+        requestId:
+          maxLength: 100
+          minLength: 4
+          type: string
+      required:
+      - requestId
+    ApisResponseV2CheckStatusResponseV2:
+      example:
+        code: 0
+        data:
+          date: 2000-01-23T04:56:07.000+00:00
+          requestId: requestId
+          codeEnvoi: codeEnvoi
+          etat: etat
+          operation: operation
+          status: true
+        message: message
+        status: SUCCESS
+      properties:
+        status:
+          enum:
+          - SUCCESS
+          - ERROR
+          - ALERT
+          - CONFLICT
+          - UNAUTHORIZED
+          - DUPLICATE
+          - NOT_FOUND
+          - FORBIDDEN
+          type: string
+        code:
+          format: int32
+          type: integer
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/CheckStatusResponseV2'
+    CheckStatusResponseV2:
+      example:
+        date: 2000-01-23T04:56:07.000+00:00
+        requestId: requestId
+        codeEnvoi: codeEnvoi
+        etat: etat
+        operation: operation
+        status: true
+      properties:
+        requestId:
+          type: string
+        status:
+          type: boolean
+        codeEnvoi:
+          type: string
+        etat:
+          type: string
+        operation:
+          type: string
+        date:
+          format: date-time
+          type: string
+    AchatEnLigneModel:
+      example:
+        latTransaction: latTransaction
+        descriptionAchat:
+        - descriptionAchat
+        - descriptionAchat
+        montantTransaction: 0.8008281904610115
+        motifTransaction: motifTransaction
+        requestId: requestId
+        phoneClient: phoneClient
+        urlCallback: urlCallback
+        adresseIp: adresseIp
+        longTransaction: longTransaction
+      properties:
+        descriptionAchat:
+          items:
+            minLength: 1
+            type: string
+          minItems: 1
+          type: array
+        montantTransaction:
+          format: double
+          type: number
+        phoneClient:
+          type: string
+        motifTransaction:
+          minLength: 1
+          type: string
+        longTransaction:
+          minLength: 1
+          type: string
+        latTransaction:
+          minLength: 1
+          type: string
+        requestId:
+          minLength: 1
+          type: string
+        urlCallback:
+          type: string
+        adresseIp:
+          minLength: 1
+          type: string
+      required:
+      - adresseIp
+      - descriptionAchat
+      - latTransaction
+      - longTransaction
+      - montantTransaction
+      - motifTransaction
+      - phoneClient
+      - requestId
+    AddAchatEnligneResponseV2:
+      example:
+        nomPartenaire: nomPartenaire
+        phoneClient: phoneClient
+        codeAchat: codeAchat
+        montant: 6.027456183070403
+        prenomPartenaire: prenomPartenaire
+        ComptePartenaire: ComptePartenaire
+        dateTransaction: 2000-01-23T04:56:07.000+00:00
+        statusTransaction: statusTransaction
+        typeTransaction: typeTransaction
+        descriptionAchat: descriptionAchat
+        requestId: requestId
+        urlPaiement: https://paiement.nitatransfert.com/p/ACH-2026-000123
+        adresseIP: adresseIP
+        publicId: publicId
+      properties:
+        publicId:
+          type: string
+        phoneClient:
+          type: string
+        requestId:
+          type: string
+        adresseIP:
+          type: string
+        codeAchat:
+          type: string
+        descriptionAchat:
+          type: string
+        montant:
+          format: double
+          type: number
+        statusTransaction:
+          type: string
+        typeTransaction:
+          type: string
+        ComptePartenaire:
+          type: string
+        nomPartenaire:
+          type: string
+        prenomPartenaire:
+          type: string
+        dateTransaction:
+          format: date-time
+          type: string
+        urlPaiement:
+          description: "Lien de règlement à transmettre à l'acheteur, dérivé du codeAchat.\
+            \ Nul tant que la page de paiement publique n'est pas en service : un\
+            \ champ absent vaut mieux qu'un lien qui ne s'ouvre pas. Ne pas le reconstruire\
+            \ à la main."
+          example: https://paiement.nitatransfert.com/p/ACH-2026-000123
+          type: string
+    ApisResponseV2AddAchatEnligneResponseV2:
+      example:
+        code: 0
+        data:
+          nomPartenaire: nomPartenaire
+          phoneClient: phoneClient
+          codeAchat: codeAchat
+          montant: 6.027456183070403
+          prenomPartenaire: prenomPartenaire
+          ComptePartenaire: ComptePartenaire
+          dateTransaction: 2000-01-23T04:56:07.000+00:00
+          statusTransaction: statusTransaction
+          typeTransaction: typeTransaction
+          descriptionAchat: descriptionAchat
+          requestId: requestId
+          urlPaiement: https://paiement.nitatransfert.com/p/ACH-2026-000123
+          adresseIP: adresseIP
+          publicId: publicId
+        message: message
+        status: SUCCESS
+      properties:
+        status:
+          enum:
+          - SUCCESS
+          - ERROR
+          - ALERT
+          - CONFLICT
+          - UNAUTHORIZED
+          - DUPLICATE
+          - NOT_FOUND
+          - FORBIDDEN
+          type: string
+        code:
+          format: int32
+          type: integer
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/AddAchatEnligneResponseV2'
+    CheckAchatStatusModel:
+      example:
+        latTransaction: latTransaction
+        requestId: requestId
+        adresseIp: adresseIp
+        longTransaction: longTransaction
+      properties:
+        requestId:
+          type: string
+        longTransaction:
+          type: string
+        latTransaction:
+          type: string
+        adresseIp:
+          type: string
+    ApisResponseV2ListVilleResponse:
+      example:
+        code: 0
+        data:
+        - nom: nom
+          pays: pays
+        - nom: nom
+          pays: pays
+        message: message
+        status: SUCCESS
+      properties:
+        status:
+          enum:
+          - SUCCESS
+          - ERROR
+          - ALERT
+          - CONFLICT
+          - UNAUTHORIZED
+          - DUPLICATE
+          - NOT_FOUND
+          - FORBIDDEN
+          type: string
+        code:
+          format: int32
+          type: integer
+        message:
+          type: string
+        data:
+          items:
+            $ref: '#/components/schemas/VilleResponse'
+          type: array
+    VilleResponse:
+      example:
+        nom: nom
+        pays: pays
+      properties:
+        nom:
+          type: string
+        pays:
+          type: string
+    ApisResponseV2IndicatifsResponseV2:
+      example:
+        code: 0
+        data:
+          paysActifs:
+          - indicatif: indicatif
+            pays: pays
+          - indicatif: indicatif
+            pays: pays
+        message: message
+        status: SUCCESS
+      properties:
+        status:
+          enum:
+          - SUCCESS
+          - ERROR
+          - ALERT
+          - CONFLICT
+          - UNAUTHORIZED
+          - DUPLICATE
+          - NOT_FOUND
+          - FORBIDDEN
+          type: string
+        code:
+          format: int32
+          type: integer
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/IndicatifsResponseV2'
+    IndicatifResponse:
+      example:
+        indicatif: indicatif
+        pays: pays
+      properties:
+        pays:
+          type: string
+        indicatif:
+          type: string
+    IndicatifsResponseV2:
+      example:
+        paysActifs:
+        - indicatif: indicatif
+          pays: pays
+        - indicatif: indicatif
+          pays: pays
+      properties:
+        paysActifs:
+          items:
+            $ref: '#/components/schemas/IndicatifResponse'
+          type: array
+    ApisResponseV2Double:
+      example:
+        code: 0
+        data: 6.027456183070403
+        message: message
+        status: SUCCESS
+      properties:
+        status:
+          enum:
+          - SUCCESS
+          - ERROR
+          - ALERT
+          - CONFLICT
+          - UNAUTHORIZED
+          - DUPLICATE
+          - NOT_FOUND
+          - FORBIDDEN
+          type: string
+        code:
+          format: int32
+          type: integer
+        message:
+          type: string
+        data:
+          format: double
+          type: number
+    EnvoiInterPartenaireRequest:
+      example:
+        montantTransaction: 0.8008281904610115
+        motifTransaction: motifTransaction
+        compteDestinataire: compteDestinataire
+        requestId: requestId
+        compteExpediteur: compteExpediteur
+        partenaireDestinataireAlias: partenaireDestinataireAlias
+        typeFraisEnvoi: typeFraisEnvoi
+      properties:
+        requestId:
+          description: Votre référence d'opération (idempotence).
+          type: string
+        partenaireDestinataireAlias:
+          description: Alias du partenaire destinataire (même organisation).
+          type: string
+        compteDestinataire:
+          description: Libellé du compte destinataire (optionnel si unique).
+          type: string
+        montantTransaction:
+          format: double
+          type: number
+        typeFraisEnvoi:
+          description: fraisApars (défaut) ou fraisInclus.
+          type: string
+        motifTransaction:
+          type: string
+        compteExpediteur:
+          description: Libellé du compte expéditeur (optionnel si unique).
+          type: string
+    EnvoiInterPartenaireResponseV2:
+      example:
+        montantTransaction: 6.027456183070403
+        compteDestinataire: compteDestinataire
+        requestId: requestId
+        montantRecu: 5.637376656633329
+        codeEnvoi: codeEnvoi
+        compteExpediteur: compteExpediteur
+        montantDebite: 5.962133916683182
+        publicId: publicId
+        dateTransaction: 2000-01-23T04:56:07.000+00:00
+        montantFrais: 1.4658129805029452
+        statusTransaction: statusTransaction
+      properties:
+        publicId:
+          type: string
+        requestId:
+          type: string
+        codeEnvoi:
+          type: string
+        montantTransaction:
+          format: double
+          type: number
+        montantFrais:
+          format: double
+          type: number
+        montantDebite:
+          format: double
+          type: number
+        montantRecu:
+          format: double
+          type: number
+        statusTransaction:
+          type: string
+        compteExpediteur:
+          type: string
+        compteDestinataire:
+          type: string
+        dateTransaction:
+          format: date-time
+          type: string
+    ApisResponseV2EnvoiInterPartenaireResponseV2:
+      example:
+        code: 0
+        data:
+          montantTransaction: 6.027456183070403
+          compteDestinataire: compteDestinataire
+          requestId: requestId
+          montantRecu: 5.637376656633329
+          codeEnvoi: codeEnvoi
+          compteExpediteur: compteExpediteur
+          montantDebite: 5.962133916683182
+          publicId: publicId
+          dateTransaction: 2000-01-23T04:56:07.000+00:00
+          montantFrais: 1.4658129805029452
+          statusTransaction: statusTransaction
+        message: message
+        status: SUCCESS
+      properties:
+        status:
+          enum:
+          - SUCCESS
+          - ERROR
+          - ALERT
+          - CONFLICT
+          - UNAUTHORIZED
+          - DUPLICATE
+          - NOT_FOUND
+          - FORBIDDEN
+          type: string
+        code:
+          format: int32
+          type: integer
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/EnvoiInterPartenaireResponseV2'
+    FraisPreviewResponseV2:
+      description: Calcul de frais (preavis). Le montant retourne est celui qui sera
+        reellement debite pour la meme demande.
+      example:
+        timbre: 5.962133916683182
+        montantReduction: 5.637376656633329
+        fraisInclus: true
+        montantRecu: 7.061401241503109
+        montant: 6.027456183070403
+        frais: 1.4658129805029452
+        montantDebite: 2.3021358869347655
+        devise: devise
+      properties:
+        montant:
+          description: Montant de la transaction demande.
+          format: double
+          type: number
+        frais:
+          description: Frais NITA applicables.
+          format: double
+          type: number
+        timbre:
+          description: Timbre fiscal (0 si non applicable).
+          format: double
+          type: number
+        montantReduction:
+          description: Reduction appliquee (0 si aucune).
+          format: double
+          type: number
+        montantDebite:
+          description: Total debite du compte partenaire.
+          format: double
+          type: number
+        montantRecu:
+          description: Montant net recu par le beneficiaire.
+          format: double
+          type: number
+        fraisInclus:
+          description: "true = frais deduits du montant, false = frais en sus."
+          type: boolean
+        devise:
+          description: Devise des montants (XOF).
+          type: string
+    ApisResponseV2FraisPreviewResponseV2:
+      example:
+        code: 0
+        data:
+          timbre: 5.962133916683182
+          montantReduction: 5.637376656633329
+          fraisInclus: true
+          montantRecu: 7.061401241503109
+          montant: 6.027456183070403
+          frais: 1.4658129805029452
+          montantDebite: 2.3021358869347655
+          devise: devise
+        message: message
+        status: SUCCESS
+      properties:
+        status:
+          enum:
+          - SUCCESS
+          - ERROR
+          - ALERT
+          - CONFLICT
+          - UNAUTHORIZED
+          - DUPLICATE
+          - NOT_FOUND
+          - FORBIDDEN
+          type: string
+        code:
+          format: int32
+          type: integer
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/FraisPreviewResponseV2'
+    PartenaireToWalletFraisRequest:
+      description: Requete de calcul des frais Partenaire vers Wallet (P2W).
+      example:
+        montantTransaction: 0.8008281904610115
+        phoneClient: phoneClient
+      properties:
+        phoneClient:
+          description: Numero du client MyNITA (wallet cible).
+          minLength: 1
+          type: string
+        montantTransaction:
+          description: Montant de la recharge.
+          format: double
+          type: number
+      required:
+      - montantTransaction
+      - phoneClient
+    EnvoiInterPartenaireFraisRequest:
+      description: Requete de calcul des frais Partenaire vers Partenaire (P2P).
+      example:
+        montantTransaction: 0.8008281904610115
+        compteDestinataire: compteDestinataire
+        compteExpediteur: compteExpediteur
+        partenaireDestinataireAlias: partenaireDestinataireAlias
+        typeFraisEnvoi: fraisApars
+      properties:
+        partenaireDestinataireAlias:
+          description: Alias du partenaire destinataire.
+          minLength: 1
+          type: string
+        compteExpediteur:
+          description: Libelle du compte expediteur (si plusieurs comptes).
+          type: string
+        compteDestinataire:
+          description: Libelle du compte destinataire (si plusieurs comptes).
+          type: string
+        montantTransaction:
+          description: Montant de l'envoi.
+          format: double
+          type: number
+        typeFraisEnvoi:
+          default: fraisApars
+          description: "fraisApars (frais en sus, defaut) ou fraisInclus (frais deduits\
+            \ du montant)."
+          type: string
+      required:
+      - montantTransaction
+      - partenaireDestinataireAlias
+  securitySchemes:
+    bearerAuth:
+      bearerFormat: JWT
+      scheme: bearer
+      type: http
+    ApiKey:
+      description: Clé API requise pour l'accès à l'API
+      in: header
+      name: X-NT-API-KEY
+      type: apiKey
