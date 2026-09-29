@@ -31,7 +31,7 @@ import (
 )
 
 func main() {
-	achatEnLigneModel := *openapiclient.NewAchatEnLigneModel([]string{"DescriptionAchat_example"}, float64(123), "PhoneClient_example", "MotifTransaction_example", "LongTransaction_example", "LatTransaction_example", "RequestId_example", "AdresseIp_example") // AchatEnLigneModel | 
+	achatEnLigneModel := *openapiclient.NewAchatEnLigneModel([]string{"DescriptionAchat_example"}, float64(123), "PhoneClient_example", "MotifTransaction_example", "RequestId_example", "AdresseIp_example") // AchatEnLigneModel | 
 
 	configuration := openapiclient.NewConfiguration()
 	apiClient := openapiclient.NewAPIClient(configuration)

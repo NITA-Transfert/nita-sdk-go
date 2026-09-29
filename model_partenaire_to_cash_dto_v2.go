@@ -42,7 +42,7 @@ type PartenaireToCashDtoV2 struct {
 	PhotoPieceIdentiteRecto *string `json:"photoPieceIdentiteRecto,omitempty"`
 	PhotoPieceIdentiteVerso *string `json:"photoPieceIdentiteVerso,omitempty"`
 	PhotoIdentite *string `json:"photoIdentite,omitempty"`
-	RequestId string `json:"requestId" validate:"regexp=^[a-zA-Z0-9_\\\\-]{4,100}$"`
+	RequestId string `json:"requestId" validate:"regexp=^[a-zA-Z0-9_\\\\-]{1,100}$"`
 	FraisInclus bool `json:"fraisInclus"`
 	Montant float64 `json:"montant"`
 	VilleDestination string `json:"villeDestination" validate:"regexp=^[\\\\p{L}\\\\s'.\\\\-]{1,100}$"`

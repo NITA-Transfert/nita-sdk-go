@@ -25,8 +25,8 @@ type AchatEnLigneModel struct {
 	MontantTransaction float64 `json:"montantTransaction"`
 	PhoneClient string `json:"phoneClient"`
 	MotifTransaction string `json:"motifTransaction"`
-	LongTransaction string `json:"longTransaction"`
-	LatTransaction string `json:"latTransaction"`
+	LongTransaction *string `json:"longTransaction,omitempty"`
+	LatTransaction *string `json:"latTransaction,omitempty"`
 	RequestId string `json:"requestId"`
 	UrlCallback *string `json:"urlCallback,omitempty"`
 	AdresseIp string `json:"adresseIp"`
@@ -38,14 +38,12 @@ type _AchatEnLigneModel AchatEnLigneModel
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewAchatEnLigneModel(descriptionAchat []string, montantTransaction float64, phoneClient string, motifTransaction string, longTransaction string, latTransaction string, requestId string, adresseIp string) *AchatEnLigneModel {
+func NewAchatEnLigneModel(descriptionAchat []string, montantTransaction float64, phoneClient string, motifTransaction string, requestId string, adresseIp string) *AchatEnLigneModel {
 	this := AchatEnLigneModel{}
 	this.DescriptionAchat = descriptionAchat
 	this.MontantTransaction = montantTransaction
 	this.PhoneClient = phoneClient
 	this.MotifTransaction = motifTransaction
-	this.LongTransaction = longTransaction
-	this.LatTransaction = latTransaction
 	this.RequestId = requestId
 	this.AdresseIp = adresseIp
 	return &this
@@ -155,52 +153,68 @@ func (o *AchatEnLigneModel) SetMotifTransaction(v string) {
 	o.MotifTransaction = v
 }
 
-// GetLongTransaction returns the LongTransaction field value
+// GetLongTransaction returns the LongTransaction field value if set, zero value otherwise.
 func (o *AchatEnLigneModel) GetLongTransaction() string {
-	if o == nil {
+	if o == nil || IsNil(o.LongTransaction) {
 		var ret string
 		return ret
 	}
-
-	return o.LongTransaction
+	return *o.LongTransaction
 }
 
-// GetLongTransactionOk returns a tuple with the LongTransaction field value
+// GetLongTransactionOk returns a tuple with the LongTransaction field value if set, nil otherwise
 // and a boolean to check if the value has been set.
 func (o *AchatEnLigneModel) GetLongTransactionOk() (*string, bool) {
-	if o == nil {
+	if o == nil || IsNil(o.LongTransaction) {
 		return nil, false
 	}
-	return &o.LongTransaction, true
+	return o.LongTransaction, true
 }
 
-// SetLongTransaction sets field value
+// HasLongTransaction returns a boolean if a field has been set.
+func (o *AchatEnLigneModel) HasLongTransaction() bool {
+	if o != nil && !IsNil(o.LongTransaction) {
+		return true
+	}
+
+	return false
+}
+
+// SetLongTransaction gets a reference to the given string and assigns it to the LongTransaction field.
 func (o *AchatEnLigneModel) SetLongTransaction(v string) {
-	o.LongTransaction = v
+	o.LongTransaction = &v
 }
 
-// GetLatTransaction returns the LatTransaction field value
+// GetLatTransaction returns the LatTransaction field value if set, zero value otherwise.
 func (o *AchatEnLigneModel) GetLatTransaction() string {
-	if o == nil {
+	if o == nil || IsNil(o.LatTransaction) {
 		var ret string
 		return ret
 	}
-
-	return o.LatTransaction
+	return *o.LatTransaction
 }
 
-// GetLatTransactionOk returns a tuple with the LatTransaction field value
+// GetLatTransactionOk returns a tuple with the LatTransaction field value if set, nil otherwise
 // and a boolean to check if the value has been set.
 func (o *AchatEnLigneModel) GetLatTransactionOk() (*string, bool) {
-	if o == nil {
+	if o == nil || IsNil(o.LatTransaction) {
 		return nil, false
 	}
-	return &o.LatTransaction, true
+	return o.LatTransaction, true
 }
 
-// SetLatTransaction sets field value
+// HasLatTransaction returns a boolean if a field has been set.
+func (o *AchatEnLigneModel) HasLatTransaction() bool {
+	if o != nil && !IsNil(o.LatTransaction) {
+		return true
+	}
+
+	return false
+}
+
+// SetLatTransaction gets a reference to the given string and assigns it to the LatTransaction field.
 func (o *AchatEnLigneModel) SetLatTransaction(v string) {
-	o.LatTransaction = v
+	o.LatTransaction = &v
 }
 
 // GetRequestId returns the RequestId field value
@@ -297,8 +311,12 @@ func (o AchatEnLigneModel) ToMap() (map[string]interface{}, error) {
 	toSerialize["montantTransaction"] = o.MontantTransaction
 	toSerialize["phoneClient"] = o.PhoneClient
 	toSerialize["motifTransaction"] = o.MotifTransaction
-	toSerialize["longTransaction"] = o.LongTransaction
-	toSerialize["latTransaction"] = o.LatTransaction
+	if !IsNil(o.LongTransaction) {
+		toSerialize["longTransaction"] = o.LongTransaction
+	}
+	if !IsNil(o.LatTransaction) {
+		toSerialize["latTransaction"] = o.LatTransaction
+	}
 	toSerialize["requestId"] = o.RequestId
 	if !IsNil(o.UrlCallback) {
 		toSerialize["urlCallback"] = o.UrlCallback
@@ -316,8 +334,6 @@ func (o *AchatEnLigneModel) UnmarshalJSON(data []byte) (err error) {
 		"montantTransaction",
 		"phoneClient",
 		"motifTransaction",
-		"longTransaction",
-		"latTransaction",
 		"requestId",
 		"adresseIp",
 	}

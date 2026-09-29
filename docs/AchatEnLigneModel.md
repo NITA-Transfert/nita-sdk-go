@@ -8,8 +8,8 @@ Name | Type | Description | Notes
 **MontantTransaction** | **float64** |  | 
 **PhoneClient** | **string** |  | 
 **MotifTransaction** | **string** |  | 
-**LongTransaction** | **string** |  | 
-**LatTransaction** | **string** |  | 
+**LongTransaction** | Pointer to **string** |  | [optional] 
+**LatTransaction** | Pointer to **string** |  | [optional] 
 **RequestId** | **string** |  | 
 **UrlCallback** | Pointer to **string** |  | [optional] 
 **AdresseIp** | **string** |  | 
@@ -18,7 +18,7 @@ Name | Type | Description | Notes
 
 ### NewAchatEnLigneModel
 
-`func NewAchatEnLigneModel(descriptionAchat []string, montantTransaction float64, phoneClient string, motifTransaction string, longTransaction string, latTransaction string, requestId string, adresseIp string, ) *AchatEnLigneModel`
+`func NewAchatEnLigneModel(descriptionAchat []string, montantTransaction float64, phoneClient string, motifTransaction string, requestId string, adresseIp string, ) *AchatEnLigneModel`
 
 NewAchatEnLigneModel instantiates a new AchatEnLigneModel object
 This constructor will assign default values to properties that have it defined,
@@ -132,6 +132,11 @@ and a boolean to check if the value has been set.
 
 SetLongTransaction sets LongTransaction field to given value.
 
+### HasLongTransaction
+
+`func (o *AchatEnLigneModel) HasLongTransaction() bool`
+
+HasLongTransaction returns a boolean if a field has been set.
 
 ### GetLatTransaction
 
@@ -152,6 +157,11 @@ and a boolean to check if the value has been set.
 
 SetLatTransaction sets LatTransaction field to given value.
 
+### HasLatTransaction
+
+`func (o *AchatEnLigneModel) HasLatTransaction() bool`
+
+HasLatTransaction returns a boolean if a field has been set.
 
 ### GetRequestId
 

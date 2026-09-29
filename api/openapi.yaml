@@ -1381,8 +1381,8 @@ components:
           type: string
         requestId:
           maxLength: 100
-          minLength: 4
-          pattern: "^[a-zA-Z0-9_\\-]{4,100}$"
+          minLength: 1
+          pattern: "^[a-zA-Z0-9_\\-]{1,100}$"
           type: string
         fraisInclus:
           type: boolean
@@ -1861,7 +1861,7 @@ components:
       properties:
         requestId:
           maxLength: 100
-          minLength: 4
+          minLength: 1
           type: string
       required:
       - requestId
@@ -1947,12 +1947,11 @@ components:
           minLength: 1
           type: string
         longTransaction:
-          minLength: 1
           type: string
         latTransaction:
-          minLength: 1
           type: string
         requestId:
+          maxLength: 100
           minLength: 1
           type: string
         urlCallback:
@@ -1963,8 +1962,6 @@ components:
       required:
       - adresseIp
       - descriptionAchat
-      - latTransaction
-      - longTransaction
       - montantTransaction
       - motifTransaction
       - phoneClient
