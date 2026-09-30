@@ -82,11 +82,19 @@ type NitaConfig struct {
 	// (X-NT-TIMESTAMP / X-NT-NONCE / X-NT-SIGNATURE). Obligatoire en production ;
 	// fixe en sandbox ("sandbox_test_signing_secret").
 	HMACSecret string
-	// HTTPClient : client de base optionnel (proxy, TLS, timeout, cookie jar…)
-	// dont le Transport sera enveloppé par la signature HMAC. Si nil, un
-	// *http.Client avec http.DefaultTransport est utilisé.
+	// HTTPClient : client de base optionnel (proxy, TLS, cookie jar…) dont le
+	// Transport sera enveloppé par la signature HMAC. Si nil, un *http.Client
+	// avec http.DefaultTransport est utilisé.
 	HTTPClient *http.Client
+	// Timeout : délai maximal de chaque appel HTTP (authentification,
+	// rafraîchissement et APIs générées). Si 0 : HTTPClient.Timeout s'il est
+	// fourni et non nul, sinon DefaultTimeout.
+	Timeout time.Duration
 }
+
+// DefaultTimeout est le délai appliqué à chaque appel HTTP quand ni
+// NitaConfig.Timeout ni NitaConfig.HTTPClient.Timeout ne sont fixés.
+const DefaultTimeout = 30 * time.Second
 
 // --- session (token + refreshToken) -------------------------------------------
 
@@ -163,11 +171,18 @@ func Connect(cfg NitaConfig) (*NitaClient, error) {
 	if base == nil {
 		base = &http.Client{}
 	}
+	timeout := cfg.Timeout
+	if timeout <= 0 {
+		timeout = base.Timeout
+	}
+	if timeout <= 0 {
+		timeout = DefaultTimeout
+	}
 	signingClient := &http.Client{
 		Transport:     &signingTransport{secret: cfg.HMACSecret, base: base.Transport},
 		CheckRedirect: base.CheckRedirect,
 		Jar:           base.Jar,
-		Timeout:       base.Timeout,
+		Timeout:       timeout,
 	}
 
 	auth, err := postAuth(signingClient, baseURL, "/api/authenticate", cfg.APIKey, map[string]string{

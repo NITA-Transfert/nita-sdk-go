@@ -51,6 +51,38 @@ To use a proxy, set the environment variable `HTTP_PROXY`:
 os.Setenv("HTTP_PROXY", "http://proxy_name:proxy_port")
 ```
 
+## Usage serveur uniquement
+
+Le SDK exige tous les secrets du partenaire (clé API, mot de passe, secret HMAC). Ne l'embarquez jamais dans une application cliente (navigateur, mobile, poste utilisateur).
+
+Chaque appel HTTP de `NitaClient` expire après 30 secondes (`NitaConfig.Timeout` pour changer ce délai).
+
+## Vérifier un callback
+
+NITA notifie votre URL de callback par un POST JSON signé (en-têtes `X-NT-TIMESTAMP`, `X-NT-NONCE`, `X-NT-SIGNATURE`). `VerifyCallback` contrôle la signature sur le corps brut, l'horodatage (tolérance 300 s) et renvoie le corps décodé, ou une erreur qui enveloppe `nita.ErrInvalidCallback`.
+
+```go
+http.HandleFunc("/nita/callback", func(w http.ResponseWriter, r *http.Request) {
+	corps, err := io.ReadAll(io.LimitReader(r.Body, 1<<20)) // corps brut, jamais re-sérialisé
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	evenement, err := nita.VerifyCallback(corps, r.Header, nita.CallbackOptions{
+		Secret:     os.Getenv("NITA_HMAC_SECRET"),
+		IsNewNonce: nonceNouveau,
+	})
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	// evenement["status"], evenement["transaction_id"]
+	w.WriteHeader(http.StatusOK)
+})
+```
+
+`IsNewNonce(nonce, ttl)` renvoie `true` si le nonce n'a jamais été vu et le conserve pendant `ttl`. Sans lui, un callback intercepté peut être rejoué pendant la fenêtre de tolérance. En production, adossez-le à un stockage partagé entre vos instances, par exemple Redis (`SET nita:nonce:<nonce> 1 NX EX <ttl>`).
+
 ## Configuration of Server URL
 
 Default configuration comes with `Servers` field that contains server objects as defined in the OpenAPI specification.

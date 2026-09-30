@@ -30,7 +30,13 @@ nita_hmac.go
 nita_jwt.go
 nita_errors.go
 nita_photos.go
+nita_callback.go
+
+# Tests ecrits a la main (couche mince).
+nita_callback_test.go
+nita_timeout_test.go
 
 # Stubs de test auto-generes : le generateur Go y laisse l import placeholder
 # (GIT_USER_ID/GIT_REPO_ID) -> casse `go build ./...`. Non pertinents pour un SDK publie.
 test/
+README.md
