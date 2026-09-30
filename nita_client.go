@@ -125,9 +125,9 @@ const refreshSkew = 30 * time.Second
 //	nc, err := nita.Connect(nita.NitaConfig{
 //		Environment: nita.EnvSandbox,
 //		APIKey:      apiKey,
-//		Login:       "demo",
-//		Password:    "demo123",
-//		HMACSecret:  "sandbox_test_signing_secret",
+//		Login:       login,
+//		Password:    password,
+//		HMACSecret:  hmacSecret,
 //	})
 //	svc, ctx, err := nc.Transactions()
 //	resp, _, err := svc.PartenaireToCash(ctx).PartenaireToCashDtoV2(dto).Execute()
