@@ -22,7 +22,8 @@ var _ MappedNullable = &GetPartenaireToWalletModel{}
 // GetPartenaireToWalletModel struct for GetPartenaireToWalletModel
 type GetPartenaireToWalletModel struct {
 	RequestId string `json:"requestId"`
-	CodeRecharge string `json:"codeRecharge"`
+	// Facultatif : absent, la recharge est retrouvée par le seul requestId (reprise après un timeout à la création).
+	CodeRecharge *string `json:"codeRecharge,omitempty"`
 }
 
 type _GetPartenaireToWalletModel GetPartenaireToWalletModel
@@ -31,10 +32,9 @@ type _GetPartenaireToWalletModel GetPartenaireToWalletModel
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewGetPartenaireToWalletModel(requestId string, codeRecharge string) *GetPartenaireToWalletModel {
+func NewGetPartenaireToWalletModel(requestId string) *GetPartenaireToWalletModel {
 	this := GetPartenaireToWalletModel{}
 	this.RequestId = requestId
-	this.CodeRecharge = codeRecharge
 	return &this
 }
 
@@ -70,28 +70,36 @@ func (o *GetPartenaireToWalletModel) SetRequestId(v string) {
 	o.RequestId = v
 }
 
-// GetCodeRecharge returns the CodeRecharge field value
+// GetCodeRecharge returns the CodeRecharge field value if set, zero value otherwise.
 func (o *GetPartenaireToWalletModel) GetCodeRecharge() string {
-	if o == nil {
+	if o == nil || IsNil(o.CodeRecharge) {
 		var ret string
 		return ret
 	}
-
-	return o.CodeRecharge
+	return *o.CodeRecharge
 }
 
-// GetCodeRechargeOk returns a tuple with the CodeRecharge field value
+// GetCodeRechargeOk returns a tuple with the CodeRecharge field value if set, nil otherwise
 // and a boolean to check if the value has been set.
 func (o *GetPartenaireToWalletModel) GetCodeRechargeOk() (*string, bool) {
-	if o == nil {
+	if o == nil || IsNil(o.CodeRecharge) {
 		return nil, false
 	}
-	return &o.CodeRecharge, true
+	return o.CodeRecharge, true
 }
 
-// SetCodeRecharge sets field value
+// HasCodeRecharge returns a boolean if a field has been set.
+func (o *GetPartenaireToWalletModel) HasCodeRecharge() bool {
+	if o != nil && !IsNil(o.CodeRecharge) {
+		return true
+	}
+
+	return false
+}
+
+// SetCodeRecharge gets a reference to the given string and assigns it to the CodeRecharge field.
 func (o *GetPartenaireToWalletModel) SetCodeRecharge(v string) {
-	o.CodeRecharge = v
+	o.CodeRecharge = &v
 }
 
 func (o GetPartenaireToWalletModel) MarshalJSON() ([]byte, error) {
@@ -105,7 +113,9 @@ func (o GetPartenaireToWalletModel) MarshalJSON() ([]byte, error) {
 func (o GetPartenaireToWalletModel) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["requestId"] = o.RequestId
-	toSerialize["codeRecharge"] = o.CodeRecharge
+	if !IsNil(o.CodeRecharge) {
+		toSerialize["codeRecharge"] = o.CodeRecharge
+	}
 	return toSerialize, nil
 }
 
@@ -115,7 +125,6 @@ func (o *GetPartenaireToWalletModel) UnmarshalJSON(data []byte) (err error) {
 	// that every required field exists as a key in the generic map.
 	requiredProperties := []string{
 		"requestId",
-		"codeRecharge",
 	}
 
 	allProperties := make(map[string]interface{})

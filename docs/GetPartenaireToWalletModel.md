@@ -5,13 +5,13 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **RequestId** | **string** |  | 
-**CodeRecharge** | **string** |  | 
+**CodeRecharge** | Pointer to **string** | Facultatif : absent, la recharge est retrouvée par le seul requestId (reprise après un timeout à la création). | [optional] 
 
 ## Methods
 
 ### NewGetPartenaireToWalletModel
 
-`func NewGetPartenaireToWalletModel(requestId string, codeRecharge string, ) *GetPartenaireToWalletModel`
+`func NewGetPartenaireToWalletModel(requestId string, ) *GetPartenaireToWalletModel`
 
 NewGetPartenaireToWalletModel instantiates a new GetPartenaireToWalletModel object
 This constructor will assign default values to properties that have it defined,
@@ -65,6 +65,11 @@ and a boolean to check if the value has been set.
 
 SetCodeRecharge sets CodeRecharge field to given value.
 
+### HasCodeRecharge
+
+`func (o *GetPartenaireToWalletModel) HasCodeRecharge() bool`
+
+HasCodeRecharge returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

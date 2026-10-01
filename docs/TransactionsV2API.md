@@ -367,7 +367,7 @@ import (
 )
 
 func main() {
-	getPartenaireToWalletModel := *openapiclient.NewGetPartenaireToWalletModel("RequestId_example", "CodeRecharge_example") // GetPartenaireToWalletModel | 
+	getPartenaireToWalletModel := *openapiclient.NewGetPartenaireToWalletModel("RequestId_example") // GetPartenaireToWalletModel | 
 
 	configuration := openapiclient.NewConfiguration()
 	apiClient := openapiclient.NewAPIClient(configuration)

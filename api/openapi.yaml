@@ -1556,11 +1556,12 @@ components:
           minLength: 0
           type: string
         codeRecharge:
+          description: "Facultatif : absent, la recharge est retrouvée par le seul\
+            \ requestId (reprise après un timeout à la création)."
           maxLength: 50
           minLength: 0
           type: string
       required:
-      - codeRecharge
       - requestId
     ApisResponseV2GetPartenaireToWalletResponseV2:
       example:
