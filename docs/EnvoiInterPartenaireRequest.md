@@ -4,10 +4,10 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**RequestId** | Pointer to **string** | Votre référence d&#39;opération (idempotence). | [optional] 
-**PartenaireDestinataireAlias** | Pointer to **string** | Alias du partenaire destinataire (même organisation). | [optional] 
+**RequestId** | **string** | Votre référence d&#39;opération (idempotence). | 
+**PartenaireDestinataireAlias** | **string** | Alias du partenaire destinataire (même organisation). | 
 **CompteDestinataire** | Pointer to **string** | Libellé du compte destinataire (optionnel si unique). | [optional] 
-**MontantTransaction** | Pointer to **float64** |  | [optional] 
+**MontantTransaction** | **float64** |  | 
 **TypeFraisEnvoi** | Pointer to **string** | fraisApars (défaut) ou fraisInclus. | [optional] 
 **MotifTransaction** | Pointer to **string** |  | [optional] 
 **CompteExpediteur** | Pointer to **string** | Libellé du compte expéditeur (optionnel si unique). | [optional] 
@@ -16,7 +16,7 @@ Name | Type | Description | Notes
 
 ### NewEnvoiInterPartenaireRequest
 
-`func NewEnvoiInterPartenaireRequest() *EnvoiInterPartenaireRequest`
+`func NewEnvoiInterPartenaireRequest(requestId string, partenaireDestinataireAlias string, montantTransaction float64, ) *EnvoiInterPartenaireRequest`
 
 NewEnvoiInterPartenaireRequest instantiates a new EnvoiInterPartenaireRequest object
 This constructor will assign default values to properties that have it defined,
@@ -50,11 +50,6 @@ and a boolean to check if the value has been set.
 
 SetRequestId sets RequestId field to given value.
 
-### HasRequestId
-
-`func (o *EnvoiInterPartenaireRequest) HasRequestId() bool`
-
-HasRequestId returns a boolean if a field has been set.
 
 ### GetPartenaireDestinataireAlias
 
@@ -75,11 +70,6 @@ and a boolean to check if the value has been set.
 
 SetPartenaireDestinataireAlias sets PartenaireDestinataireAlias field to given value.
 
-### HasPartenaireDestinataireAlias
-
-`func (o *EnvoiInterPartenaireRequest) HasPartenaireDestinataireAlias() bool`
-
-HasPartenaireDestinataireAlias returns a boolean if a field has been set.
 
 ### GetCompteDestinataire
 
@@ -125,11 +115,6 @@ and a boolean to check if the value has been set.
 
 SetMontantTransaction sets MontantTransaction field to given value.
 
-### HasMontantTransaction
-
-`func (o *EnvoiInterPartenaireRequest) HasMontantTransaction() bool`
-
-HasMontantTransaction returns a boolean if a field has been set.
 
 ### GetTypeFraisEnvoi
 

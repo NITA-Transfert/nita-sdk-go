@@ -12,6 +12,8 @@ package nita
 
 import (
 	"encoding/json"
+	"bytes"
+	"fmt"
 )
 
 // checks if the EnvoiInterPartenaireRequest type satisfies the MappedNullable interface at compile time
@@ -20,12 +22,12 @@ var _ MappedNullable = &EnvoiInterPartenaireRequest{}
 // EnvoiInterPartenaireRequest struct for EnvoiInterPartenaireRequest
 type EnvoiInterPartenaireRequest struct {
 	// Votre référence d'opération (idempotence).
-	RequestId *string `json:"requestId,omitempty"`
+	RequestId string `json:"requestId"`
 	// Alias du partenaire destinataire (même organisation).
-	PartenaireDestinataireAlias *string `json:"partenaireDestinataireAlias,omitempty"`
+	PartenaireDestinataireAlias string `json:"partenaireDestinataireAlias"`
 	// Libellé du compte destinataire (optionnel si unique).
 	CompteDestinataire *string `json:"compteDestinataire,omitempty"`
-	MontantTransaction *float64 `json:"montantTransaction,omitempty"`
+	MontantTransaction float64 `json:"montantTransaction"`
 	// fraisApars (défaut) ou fraisInclus.
 	TypeFraisEnvoi *string `json:"typeFraisEnvoi,omitempty"`
 	MotifTransaction *string `json:"motifTransaction,omitempty"`
@@ -33,12 +35,17 @@ type EnvoiInterPartenaireRequest struct {
 	CompteExpediteur *string `json:"compteExpediteur,omitempty"`
 }
 
+type _EnvoiInterPartenaireRequest EnvoiInterPartenaireRequest
+
 // NewEnvoiInterPartenaireRequest instantiates a new EnvoiInterPartenaireRequest object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewEnvoiInterPartenaireRequest() *EnvoiInterPartenaireRequest {
+func NewEnvoiInterPartenaireRequest(requestId string, partenaireDestinataireAlias string, montantTransaction float64) *EnvoiInterPartenaireRequest {
 	this := EnvoiInterPartenaireRequest{}
+	this.RequestId = requestId
+	this.PartenaireDestinataireAlias = partenaireDestinataireAlias
+	this.MontantTransaction = montantTransaction
 	return &this
 }
 
@@ -50,68 +57,52 @@ func NewEnvoiInterPartenaireRequestWithDefaults() *EnvoiInterPartenaireRequest {
 	return &this
 }
 
-// GetRequestId returns the RequestId field value if set, zero value otherwise.
+// GetRequestId returns the RequestId field value
 func (o *EnvoiInterPartenaireRequest) GetRequestId() string {
-	if o == nil || IsNil(o.RequestId) {
+	if o == nil {
 		var ret string
 		return ret
 	}
-	return *o.RequestId
+
+	return o.RequestId
 }
 
-// GetRequestIdOk returns a tuple with the RequestId field value if set, nil otherwise
+// GetRequestIdOk returns a tuple with the RequestId field value
 // and a boolean to check if the value has been set.
 func (o *EnvoiInterPartenaireRequest) GetRequestIdOk() (*string, bool) {
-	if o == nil || IsNil(o.RequestId) {
+	if o == nil {
 		return nil, false
 	}
-	return o.RequestId, true
+	return &o.RequestId, true
 }
 
-// HasRequestId returns a boolean if a field has been set.
-func (o *EnvoiInterPartenaireRequest) HasRequestId() bool {
-	if o != nil && !IsNil(o.RequestId) {
-		return true
-	}
-
-	return false
-}
-
-// SetRequestId gets a reference to the given string and assigns it to the RequestId field.
+// SetRequestId sets field value
 func (o *EnvoiInterPartenaireRequest) SetRequestId(v string) {
-	o.RequestId = &v
+	o.RequestId = v
 }
 
-// GetPartenaireDestinataireAlias returns the PartenaireDestinataireAlias field value if set, zero value otherwise.
+// GetPartenaireDestinataireAlias returns the PartenaireDestinataireAlias field value
 func (o *EnvoiInterPartenaireRequest) GetPartenaireDestinataireAlias() string {
-	if o == nil || IsNil(o.PartenaireDestinataireAlias) {
+	if o == nil {
 		var ret string
 		return ret
 	}
-	return *o.PartenaireDestinataireAlias
+
+	return o.PartenaireDestinataireAlias
 }
 
-// GetPartenaireDestinataireAliasOk returns a tuple with the PartenaireDestinataireAlias field value if set, nil otherwise
+// GetPartenaireDestinataireAliasOk returns a tuple with the PartenaireDestinataireAlias field value
 // and a boolean to check if the value has been set.
 func (o *EnvoiInterPartenaireRequest) GetPartenaireDestinataireAliasOk() (*string, bool) {
-	if o == nil || IsNil(o.PartenaireDestinataireAlias) {
+	if o == nil {
 		return nil, false
 	}
-	return o.PartenaireDestinataireAlias, true
+	return &o.PartenaireDestinataireAlias, true
 }
 
-// HasPartenaireDestinataireAlias returns a boolean if a field has been set.
-func (o *EnvoiInterPartenaireRequest) HasPartenaireDestinataireAlias() bool {
-	if o != nil && !IsNil(o.PartenaireDestinataireAlias) {
-		return true
-	}
-
-	return false
-}
-
-// SetPartenaireDestinataireAlias gets a reference to the given string and assigns it to the PartenaireDestinataireAlias field.
+// SetPartenaireDestinataireAlias sets field value
 func (o *EnvoiInterPartenaireRequest) SetPartenaireDestinataireAlias(v string) {
-	o.PartenaireDestinataireAlias = &v
+	o.PartenaireDestinataireAlias = v
 }
 
 // GetCompteDestinataire returns the CompteDestinataire field value if set, zero value otherwise.
@@ -146,36 +137,28 @@ func (o *EnvoiInterPartenaireRequest) SetCompteDestinataire(v string) {
 	o.CompteDestinataire = &v
 }
 
-// GetMontantTransaction returns the MontantTransaction field value if set, zero value otherwise.
+// GetMontantTransaction returns the MontantTransaction field value
 func (o *EnvoiInterPartenaireRequest) GetMontantTransaction() float64 {
-	if o == nil || IsNil(o.MontantTransaction) {
+	if o == nil {
 		var ret float64
 		return ret
 	}
-	return *o.MontantTransaction
+
+	return o.MontantTransaction
 }
 
-// GetMontantTransactionOk returns a tuple with the MontantTransaction field value if set, nil otherwise
+// GetMontantTransactionOk returns a tuple with the MontantTransaction field value
 // and a boolean to check if the value has been set.
 func (o *EnvoiInterPartenaireRequest) GetMontantTransactionOk() (*float64, bool) {
-	if o == nil || IsNil(o.MontantTransaction) {
+	if o == nil {
 		return nil, false
 	}
-	return o.MontantTransaction, true
+	return &o.MontantTransaction, true
 }
 
-// HasMontantTransaction returns a boolean if a field has been set.
-func (o *EnvoiInterPartenaireRequest) HasMontantTransaction() bool {
-	if o != nil && !IsNil(o.MontantTransaction) {
-		return true
-	}
-
-	return false
-}
-
-// SetMontantTransaction gets a reference to the given float64 and assigns it to the MontantTransaction field.
+// SetMontantTransaction sets field value
 func (o *EnvoiInterPartenaireRequest) SetMontantTransaction(v float64) {
-	o.MontantTransaction = &v
+	o.MontantTransaction = v
 }
 
 // GetTypeFraisEnvoi returns the TypeFraisEnvoi field value if set, zero value otherwise.
@@ -284,18 +267,12 @@ func (o EnvoiInterPartenaireRequest) MarshalJSON() ([]byte, error) {
 
 func (o EnvoiInterPartenaireRequest) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
-	if !IsNil(o.RequestId) {
-		toSerialize["requestId"] = o.RequestId
-	}
-	if !IsNil(o.PartenaireDestinataireAlias) {
-		toSerialize["partenaireDestinataireAlias"] = o.PartenaireDestinataireAlias
-	}
+	toSerialize["requestId"] = o.RequestId
+	toSerialize["partenaireDestinataireAlias"] = o.PartenaireDestinataireAlias
 	if !IsNil(o.CompteDestinataire) {
 		toSerialize["compteDestinataire"] = o.CompteDestinataire
 	}
-	if !IsNil(o.MontantTransaction) {
-		toSerialize["montantTransaction"] = o.MontantTransaction
-	}
+	toSerialize["montantTransaction"] = o.MontantTransaction
 	if !IsNil(o.TypeFraisEnvoi) {
 		toSerialize["typeFraisEnvoi"] = o.TypeFraisEnvoi
 	}
@@ -306,6 +283,45 @@ func (o EnvoiInterPartenaireRequest) ToMap() (map[string]interface{}, error) {
 		toSerialize["compteExpediteur"] = o.CompteExpediteur
 	}
 	return toSerialize, nil
+}
+
+func (o *EnvoiInterPartenaireRequest) UnmarshalJSON(data []byte) (err error) {
+	// This validates that all required properties are included in the JSON object
+	// by unmarshalling the object into a generic map with string keys and checking
+	// that every required field exists as a key in the generic map.
+	requiredProperties := []string{
+		"requestId",
+		"partenaireDestinataireAlias",
+		"montantTransaction",
+	}
+
+	allProperties := make(map[string]interface{})
+
+	err = json.Unmarshal(data, &allProperties)
+
+	if err != nil {
+		return err;
+	}
+
+	for _, requiredProperty := range(requiredProperties) {
+		if _, exists := allProperties[requiredProperty]; !exists {
+			return fmt.Errorf("no value given for required property %v", requiredProperty)
+		}
+	}
+
+	varEnvoiInterPartenaireRequest := _EnvoiInterPartenaireRequest{}
+
+	decoder := json.NewDecoder(bytes.NewReader(data))
+	decoder.DisallowUnknownFields()
+	err = decoder.Decode(&varEnvoiInterPartenaireRequest)
+
+	if err != nil {
+		return err
+	}
+
+	*o = EnvoiInterPartenaireRequest(varEnvoiInterPartenaireRequest)
+
+	return err
 }
 
 type NullableEnvoiInterPartenaireRequest struct {

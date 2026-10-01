@@ -2220,6 +2220,10 @@ components:
         compteExpediteur:
           description: Libellé du compte expéditeur (optionnel si unique).
           type: string
+      required:
+      - montantTransaction
+      - partenaireDestinataireAlias
+      - requestId
     EnvoiInterPartenaireResponseV2:
       example:
         montantTransaction: 6.027456183070403

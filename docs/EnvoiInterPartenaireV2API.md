@@ -96,7 +96,7 @@ import (
 )
 
 func main() {
-	envoiInterPartenaireRequest := *openapiclient.NewEnvoiInterPartenaireRequest() // EnvoiInterPartenaireRequest | 
+	envoiInterPartenaireRequest := *openapiclient.NewEnvoiInterPartenaireRequest("RequestId_example", "PartenaireDestinataireAlias_example", float64(123)) // EnvoiInterPartenaireRequest | 
 
 	configuration := openapiclient.NewConfiguration()
 	apiClient := openapiclient.NewAPIClient(configuration)
