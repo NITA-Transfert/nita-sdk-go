@@ -12,6 +12,7 @@ Name | Type | Description | Notes
 **LatTransaction** | Pointer to **string** |  | [optional] 
 **RequestId** | **string** |  | 
 **UrlCallback** | Pointer to **string** |  | [optional] 
+**UrlRetour** | Pointer to **string** |  | [optional] 
 **AdresseIp** | **string** |  | 
 
 ## Methods
@@ -207,6 +208,31 @@ SetUrlCallback sets UrlCallback field to given value.
 `func (o *AchatEnLigneModel) HasUrlCallback() bool`
 
 HasUrlCallback returns a boolean if a field has been set.
+
+### GetUrlRetour
+
+`func (o *AchatEnLigneModel) GetUrlRetour() string`
+
+GetUrlRetour returns the UrlRetour field if non-nil, zero value otherwise.
+
+### GetUrlRetourOk
+
+`func (o *AchatEnLigneModel) GetUrlRetourOk() (*string, bool)`
+
+GetUrlRetourOk returns a tuple with the UrlRetour field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetUrlRetour
+
+`func (o *AchatEnLigneModel) SetUrlRetour(v string)`
+
+SetUrlRetour sets UrlRetour field to given value.
+
+### HasUrlRetour
+
+`func (o *AchatEnLigneModel) HasUrlRetour() bool`
+
+HasUrlRetour returns a boolean if a field has been set.
 
 ### GetAdresseIp
 

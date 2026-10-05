@@ -29,6 +29,7 @@ type AchatEnLigneModel struct {
 	LatTransaction *string `json:"latTransaction,omitempty"`
 	RequestId string `json:"requestId"`
 	UrlCallback *string `json:"urlCallback,omitempty"`
+	UrlRetour *string `json:"urlRetour,omitempty"`
 	AdresseIp string `json:"adresseIp"`
 }
 
@@ -273,6 +274,38 @@ func (o *AchatEnLigneModel) SetUrlCallback(v string) {
 	o.UrlCallback = &v
 }
 
+// GetUrlRetour returns the UrlRetour field value if set, zero value otherwise.
+func (o *AchatEnLigneModel) GetUrlRetour() string {
+	if o == nil || IsNil(o.UrlRetour) {
+		var ret string
+		return ret
+	}
+	return *o.UrlRetour
+}
+
+// GetUrlRetourOk returns a tuple with the UrlRetour field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *AchatEnLigneModel) GetUrlRetourOk() (*string, bool) {
+	if o == nil || IsNil(o.UrlRetour) {
+		return nil, false
+	}
+	return o.UrlRetour, true
+}
+
+// HasUrlRetour returns a boolean if a field has been set.
+func (o *AchatEnLigneModel) HasUrlRetour() bool {
+	if o != nil && !IsNil(o.UrlRetour) {
+		return true
+	}
+
+	return false
+}
+
+// SetUrlRetour gets a reference to the given string and assigns it to the UrlRetour field.
+func (o *AchatEnLigneModel) SetUrlRetour(v string) {
+	o.UrlRetour = &v
+}
+
 // GetAdresseIp returns the AdresseIp field value
 func (o *AchatEnLigneModel) GetAdresseIp() string {
 	if o == nil {
@@ -320,6 +353,9 @@ func (o AchatEnLigneModel) ToMap() (map[string]interface{}, error) {
 	toSerialize["requestId"] = o.RequestId
 	if !IsNil(o.UrlCallback) {
 		toSerialize["urlCallback"] = o.UrlCallback
+	}
+	if !IsNil(o.UrlRetour) {
+		toSerialize["urlRetour"] = o.UrlRetour
 	}
 	toSerialize["adresseIp"] = o.AdresseIp
 	return toSerialize, nil

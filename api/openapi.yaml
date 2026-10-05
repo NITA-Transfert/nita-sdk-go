@@ -1929,6 +1929,7 @@ components:
         motifTransaction: motifTransaction
         requestId: requestId
         phoneClient: phoneClient
+        urlRetour: urlRetour
         urlCallback: urlCallback
         adresseIp: adresseIp
         longTransaction: longTransaction
@@ -1956,6 +1957,8 @@ components:
           minLength: 1
           type: string
         urlCallback:
+          type: string
+        urlRetour:
           type: string
         adresseIp:
           minLength: 1
