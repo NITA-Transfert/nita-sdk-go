@@ -363,6 +363,7 @@ func postAuth(client *http.Client, baseURL, path, apiKey string, payload map[str
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("X-NT-API-KEY", apiKey)
+	req.Header.Set("User-Agent", NewConfiguration().UserAgent)
 
 	resp, err := client.Do(req)
 	if err != nil {
