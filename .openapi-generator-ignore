@@ -40,3 +40,4 @@ nita_timeout_test.go
 # (GIT_USER_ID/GIT_REPO_ID) -> casse `go build ./...`. Non pertinents pour un SDK publie.
 test/
 README.md
+nita_baseurl_test.go

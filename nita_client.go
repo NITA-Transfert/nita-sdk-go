@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 	"sync"
 	"time"
@@ -43,7 +44,11 @@ const (
 
 func resolveBaseURL(cfg NitaConfig) (string, error) {
 	if cfg.BaseURL != "" {
-		return strings.TrimRight(cfg.BaseURL, "/"), nil
+		base := strings.TrimRight(cfg.BaseURL, "/")
+		if err := requireSecureBaseURL(base); err != nil {
+			return "", err
+		}
+		return base, nil
 	}
 	env := cfg.Environment
 	if env == "" {
@@ -61,7 +66,30 @@ func resolveBaseURL(cfg NitaConfig) (string, error) {
 	if preset == "" {
 		return "", fmt.Errorf("nita: URL de base introuvable pour l'environnement %q ; passe NitaConfig.BaseURL explicitement (l'URL est indiquée dans ton espace partenaire)", env)
 	}
+	if err := requireSecureBaseURL(preset); err != nil {
+		return "", err
+	}
 	return preset, nil
+}
+
+// requireSecureBaseURL refuse une URL de base qui n'est pas en https:// : la clé
+// API, le mot de passe et le jeton y circuleraient en clair. Seule exception :
+// http:// vers la machine locale (localhost, 127.0.0.1, ::1).
+func requireSecureBaseURL(base string) error {
+	u, err := url.Parse(base)
+	if err != nil || u.Hostname() == "" {
+		return fmt.Errorf("nita: URL de base invalide %q", base)
+	}
+	host := strings.ToLower(u.Hostname())
+	switch strings.ToLower(u.Scheme) {
+	case "https":
+		return nil
+	case "http":
+		if host == "localhost" || host == "127.0.0.1" || host == "::1" {
+			return nil
+		}
+	}
+	return fmt.Errorf("nita: URL de base refusée %q ; utilise une adresse en https:// (http:// n'est accepté que vers localhost)", base)
 }
 
 // --- configuration ------------------------------------------------------------
