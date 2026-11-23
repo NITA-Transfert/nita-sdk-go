@@ -92,7 +92,7 @@ type Configuration struct {
 func NewConfiguration() *Configuration {
 	cfg := &Configuration{
 		DefaultHeader:    make(map[string]string),
-		UserAgent:        "nita-sdk-go/0.1.0-beta.3",
+		UserAgent:        "nita-sdk-go/0.1.0-beta.4",
 		Debug:            false,
 		Servers:          ServerConfigurations{
 			{
